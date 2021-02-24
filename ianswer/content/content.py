@@ -11,7 +11,7 @@ class ContentReadException(Exception):
         super().__init__(msg)
 
 
-class ContentInterface:
+class Content:
     def __init__(self, tag=None, parent=None):
         """
         :param tag:     Name for content instance
@@ -27,13 +27,13 @@ class ContentInterface:
         return self.parent
 
 
-class ContentCollection(ContentInterface):
+class ContentCollection(Content):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.collection = list()
 
 
-class Content(ContentInterface):
+class ContentNode(Content):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text = None
