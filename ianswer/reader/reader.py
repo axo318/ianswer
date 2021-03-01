@@ -1,26 +1,24 @@
 import os
 from ianswer.exception.exceptions import ContentReadException
 from ianswer.content.content import ContentCollection, ContentNode, Content
+
 SUPPORTED_EXTENSIONS = ['txt']
+
 
 class Reader:
     """Interface used to read files"""
-    
-    def read(self,path_to_folder: str)-> Content:
+
+    def read(self, path_to_folder: str) -> Content:
         return self._read(path_to_folder)
 
-    def _read(self, path_to_folder):
+    def _read(self, path_to_folder: str) -> Content:
         pass
 
 
-
 class ReaderTxt(Reader):
-    """Reader Responsible for reading .txt files 
+    """Reader Responsible for reading .txt files"""
 
-    :param Reader: Super Class
-    :type Reader: Reader
-    """
-    def _read(self,path_to_folder):
+    def _read(self, path_to_folder):
         """Reads files from folder and returns collection
 
         :param path_to_folder: path to folder

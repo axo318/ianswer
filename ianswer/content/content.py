@@ -1,4 +1,3 @@
-import os
 
 
 class Content:
@@ -9,16 +8,16 @@ class Content:
         """
         self._tag = tag
         self._parent = parent
-    
+
     def __repr__(self):
         return self.getText()
-    
+
     @property
     def tag(self):
         return self._tag
-    
+
     @tag.setter
-    def tag(self,new_tag):
+    def tag(self, new_tag):
         self._tag = new_tag
 
     @property
@@ -33,7 +32,7 @@ class Content:
         """Returns the text of all text contained in this Content
         """
         pass
-    
+
 
 class ContentCollection(Content):
     def __init__(self, collection=None, *args, **kwargs):
@@ -42,21 +41,21 @@ class ContentCollection(Content):
 
     def __iter__(self):
         return (x for x in self.collection)
-    
+
     def __setitem__(self, i, collection):
-          self.collection[i] = collection
-    
+        self.collection[i] = collection
+
     def __getitem__(self, i):
-          return self.collection[i]
+        return self.collection[i]
 
     @property
     def collection(self):
         return self._collection
-    
+
     @collection.setter
     def collection(self, new_collection):
         self._collection = new_collection
-    
+
     def add(self, content: Content) -> None:
         """Adds content to collection
 
@@ -67,7 +66,7 @@ class ContentCollection(Content):
         self._collection.append(content)
 
     def getText(self):
-        return "".join([c.getText()+"\n" for c in self.collection])
+        return "".join([c.getText() + "\n" for c in self.collection])
 
 
 class ContentNode(Content):
@@ -78,7 +77,7 @@ class ContentNode(Content):
     @property
     def text(self):
         return self._text
-    
+
     @text.setter
     def text(self, new_text):
         self._text = new_text
