@@ -1,3 +1,3 @@
-hello world
-james is gay
-alexa is the bootylicious
+1. hello world
+1. james is gay
+1. alexa is the bootylicious
