@@ -1,7 +1,7 @@
 import os
 
 from ianswer.common import IAnswerObject
-from ianswer.exceptions.exceptions import ContentReadException
+from ianswer.common.exceptions import ContentReadException
 from ianswer.content.content import ContentCollection, ContentLeaf, Content
 
 

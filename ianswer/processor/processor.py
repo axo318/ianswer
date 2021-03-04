@@ -6,8 +6,9 @@ from ianswer.content.content import Content
 
 class Processor(IAnswerObject):
     def actOnContent(self, content: Content) -> None:
-        """ Public processor call, passing execution implementation to private _actOnContent method.
-            Performs processing routines on the given content tree.
+        """ Performs processing routines on the given content tree.
+        Passes execution implementation to private _actOnContent method, defined in
+        implementations of Processor.
 
         :param content: root of the content tree
         :return:

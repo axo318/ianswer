@@ -1,13 +1,29 @@
 from typing import List, Union
 
-from ianswer.common import IAnswerObject
+from ianswer.common import IAnswerObject, IndexedData
 
 
 class Content(IAnswerObject):
-    def __init__(self, tag="", parent=None, index=0, collection=None, text_data=None, processed_data=None):
-        """
-        :param tag:     Name for content instance
-        :param parent:  Parent Content
+    def __init__(self,
+                 tag: str = "",
+                 parent: 'Content' = None,
+                 index: int = 0,
+                 collection: list = None,
+                 text_data: str = None,
+                 processed_data: str = None,
+                 indexed_data: IndexedData = None):
+        """ Tree structure for holding text information
+
+        Tree nodes must always be of subclass ContentCollection
+        Tree leaves must always be of subclass ContentLeaf
+
+        :param tag: name of the current Content (root for tree root)
+        :param parent: parent content instance of current object (None for root)
+        :param index: position of current object in parent
+        :param collection: list containing the children of current Content (if node)
+        :param text_data: text data contained in the current Content (if leaf)
+        :param processed_data: processed data
+        :param indexed_data: Algorithm specific storage
         """
         self._tag = tag
         self._parent = parent
@@ -15,6 +31,7 @@ class Content(IAnswerObject):
         self._collection = collection
         self._text_data = text_data
         self._processed_data = processed_data
+        self._indexed_data = indexed_data
 
     def __iter__(self):
         if self._collection:
@@ -65,6 +82,20 @@ class Content(IAnswerObject):
         while root.parent:
             root = root.parent
         return root
+
+    def getTitle(self) -> str:
+        """ Returns the title of the current Content.
+
+        The title is the path from the tree root to the current content
+
+        :return:
+        """
+        title_contents = list()
+        temp = self
+        while temp:
+            title_contents.append(temp.tag)
+            temp = temp.parent
+        return '/'.join(title_contents[::-1])
 
     def replace(self, new: 'Content'):
         """ Replaces the old content subtree with the new one
@@ -138,8 +169,16 @@ class Content(IAnswerObject):
         return self._index
 
     @index.setter
-    def index(self, new_index):
+    def index(self, new_index: int):
         self._index = new_index
+
+    @property
+    def indexed_data(self) -> IndexedData:
+        return self._indexed_data
+
+    @indexed_data.setter
+    def indexed_data(self, new_indexed_data: IndexedData):
+        self._indexed_data = new_indexed_data
 
 
 class ContentCollection(Content):

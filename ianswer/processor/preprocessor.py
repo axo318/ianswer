@@ -29,4 +29,5 @@ class SimplePreprocessor(PreProcessor):
     def _processLeaf(self, content: Content) -> None:
         text = content.text_data
         text = text.strip().replace('\n', '')
+        text = " ".join(text.split(' '))
         content.processed_data = text

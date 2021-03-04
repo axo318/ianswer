@@ -3,7 +3,13 @@ from ianswer.processor.processor import Processor
 
 
 class Segmenter(Processor):
-    def __init__(self, tag="segment"):
+    def __init__(self, tag="segment") -> None:
+        """ Instantiates segmenter object with the given tag
+
+        :param tag: depth level of depth segmentation. Can be user-defined string.
+                    eg. 'Paragraph', 'Sentence', 'Word' etc
+                    This will be the tag given to the newly created content leaves
+        """
         self.child_tag = tag
 
     def _actOnContent(self, content: Content) -> None:
@@ -29,6 +35,8 @@ class Segmenter(Processor):
 
 
 class SimpleSegmenter(Segmenter):
+    """ Segments given text for every newline character.
+    """
     def _segmentLeaf(self, content: ContentLeaf) -> ContentCollection:
         text = content.getText()
         segmented_text = text.split('\n')
