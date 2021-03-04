@@ -1,8 +1,10 @@
+from typing import List, Union
+
 from ianswer.common import IAnswerObject
 
 
 class Content(IAnswerObject):
-    def __init__(self, tag="", parent=None, collection=None, text_data=None, processed_data=None, index=0):
+    def __init__(self, tag="", parent=None, index=0, collection=None, text_data=None, processed_data=None):
         """
         :param tag:     Name for content instance
         :param parent:  Parent Content
@@ -14,6 +16,83 @@ class Content(IAnswerObject):
         self._text_data = text_data
         self._processed_data = processed_data
 
+    def __iter__(self):
+        if self._collection:
+            return (x for x in self.collection)
+        return ()
+
+    def __setitem__(self, i, collection):
+        if self._collection:
+            self.collection[i] = collection
+
+    def __getitem__(self, i) -> Union['Content', None]:
+        if self._collection:
+            return self.collection[i]
+        return None
+
+    # public calls
+    def getRepr(self) -> str:
+        """ Returns printable string representing the current object
+
+        :return: string representation
+        """
+        return f"{self.__class__.__name__}(tag= {self._tag})"
+
+    def getLeaves(self) -> List['ContentLeaf']:
+        """ Creates a list of leaves using the input content as a tree root
+            Left side first
+
+        :return: list containing leaf objects (ContentLeaf)
+        """
+        stack = list()
+
+        def constructStack(c: Content):
+            if c.isLeaf():
+                stack.append(c)
+                return
+            for child in c.collection:
+                constructStack(child)
+
+        constructStack(self)
+        return stack
+
+    def getRoot(self) -> 'Content':
+        """ Returns the tree root which contains the current object
+
+        :return: root of this content's tree
+        """
+        root = self
+        while root.parent:
+            root = root.parent
+        return root
+
+    def replace(self, new: 'Content'):
+        """ Replaces the old content subtree with the new one
+
+        :param new: new Content subtree
+        :return:
+        """
+        parent = self.parent
+        index = self.index
+
+        new.parent = parent
+        new.index = index
+
+        if parent:
+            parent[index] = new
+
+        del self
+
+    def isLeaf(self) -> bool:
+        """Determines whether the current object instance is a leaf or a collection"""
+        pass
+
+    def getText(self) -> str:
+        """Returns all text contained in this Content and in any possible children
+        """
+        pass
+
+    # getter and Setter properties
     @property
     def tag(self) -> str:
         return self._tag
@@ -62,22 +141,6 @@ class Content(IAnswerObject):
     def index(self, new_index):
         self._index = new_index
 
-    def getRepr(self) -> str:
-        """ Returns printable string representing the current object
-
-        :return: string representation
-        """
-        return f"{self.__class__.__name__}(tag = {self._tag})"
-
-    def isLeaf(self) -> bool:
-        """Determines whether the current object instance is a leaf or a collection"""
-        pass
-
-    def getText(self) -> str:
-        """Returns all text contained in this Content and in any possible children
-        """
-        pass
-
 
 class ContentCollection(Content):
     def __init__(self, *args, **kwargs):
@@ -86,19 +149,11 @@ class ContentCollection(Content):
 
     def __repr__(self):
         s = self.getRepr() + ' [' + '\n'
-        s += '\n'.join([c.getRepr() for c in self.collection]).strip()
+        s += '\n'.join(['-> '+c.getRepr() for c in self.collection]).strip()
         s += '\n' + ']'
         return s
 
-    def __iter__(self):
-        return (x for x in self.collection)
-
-    def __setitem__(self, i, collection):
-        self.collection[i] = collection
-
-    def __getitem__(self, i):
-        return self.collection[i]
-
+    # public calls
     def add(self, content: Content) -> None:
         """Adds content to collection
 
@@ -116,7 +171,7 @@ class ContentCollection(Content):
         return "".join([c.getText() + "\n" for c in self.collection])
 
 
-class ContentNode(Content):
+class ContentLeaf(Content):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.text_data = self.text_data if self.text_data else ""
@@ -127,6 +182,7 @@ class ContentNode(Content):
         s += '\n' + ']'
         return s
 
+    # public calls
     def isLeaf(self):
         return True
 

@@ -1,9 +1,8 @@
 import unittest
 import os
 from ianswer.content.content import ContentCollection
-from ianswer.content.utils import getContentLeaves
+from ianswer.processor.segmenter import SimpleSegmenter
 from ianswer.reader.reader import ReaderTxt
-from ianswer.processor.preprocessor import SimplePreprocessor
 
 
 test_folder = 'test_data'
@@ -13,17 +12,22 @@ path_to_folder = os.path.join(file_path, test_folder)
 
 class PreprocessorTestCase(unittest.TestCase):
 
-    def test_SimplePreprocessor(self):
+    def test_SimpleSegmenter(self):
         collection1 = ReaderTxt().read(path_to_folder=path_to_folder)
+        collection1.tag = "collection1"
         collection2 = ReaderTxt().read(path_to_folder=path_to_folder)
+        collection2.tag = "collection2"
         collection = ContentCollection()
         collection.add(collection1)
         collection.add(collection2)
+        print('Before segmenting...')
+        print(collection)
+        print()
 
-        pre = SimplePreprocessor()
-        pre.actOnContent(collection)
+        seg = SimpleSegmenter(tag='Paragraph')
+        seg.actOnContent(collection[0])
+        print('After Segmenting...')
+        print(collection)
+        print(collection[0])
+        print(collection1[0][4])
 
-        leaves = getContentLeaves(collection)
-        print(f"Number of leaves: {len(leaves)}")
-        for leaf in leaves:
-            print(leaf.processed_data)

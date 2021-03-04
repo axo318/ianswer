@@ -1,8 +1,8 @@
 import os
 
 from ianswer.common import IAnswerObject
-from ianswer.exception.exceptions import ContentReadException
-from ianswer.content.content import ContentCollection, ContentNode, Content
+from ianswer.exceptions.exceptions import ContentReadException
+from ianswer.content.content import ContentCollection, ContentLeaf, Content
 
 
 SUPPORTED_EXTENSIONS = ['txt']
@@ -37,7 +37,7 @@ class ReaderTxt(Reader):
             try:
                 with open(file, 'r') as open_file:
                     text = open_file.read()
-                    content = ContentNode(tag=file, text_data=text)
+                    content = ContentLeaf(tag=file, text_data=text)
                     collection.add(content=content)
             except Exception as e:
                 raise ContentReadException(file) from e

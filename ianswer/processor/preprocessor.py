@@ -1,11 +1,10 @@
-from ianswer.common import IAnswerObject
 from ianswer.content.content import Content
-from ianswer.content.utils import getContentLeaves
+from ianswer.processor.processor import Processor
 
 
-class PreProcessor(IAnswerObject):
+class PreProcessor(Processor):
 
-    def actOnContent(self, content: Content) -> None:
+    def _actOnContent(self, content: Content) -> None:
         """ Performs pre-processing on the given content tree.
             This should not change the underlying structure of the tree.
             All processing is performed on the data contained in the leaves.
@@ -14,9 +13,8 @@ class PreProcessor(IAnswerObject):
         :param content: root of the content tree
         :return:
         """
-        for leaf in getContentLeaves(content):
+        for leaf in content.getLeaves():
             self._processLeaf(leaf)
-        pass
 
     def _processLeaf(self, content: Content) -> None:
         """ Performs pre-processing on the data of given content leaf
