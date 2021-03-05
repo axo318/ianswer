@@ -8,6 +8,8 @@ from ianswer.common import IAnswerObject
 from ianswer.common.exceptions import FatalError
 from ianswer.resources import RESOURCE_FOLDER
 
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'    # Silence tensorflow debug info
+
 
 class Embedder(IAnswerObject):
     """ Abstract Embedder class defining interface for embedder implementations.

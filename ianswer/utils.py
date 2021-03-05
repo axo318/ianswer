@@ -1,17 +1,16 @@
 from ianswer.algorithm.algorithm import SimpleAlgorithm
 from ianswer.embedder.embedder import GoogleEncoder
 from ianswer.model import IModel
-from ianswer.processor.preprocessor import SimplePreprocessor
+from ianswer.processor.preprocessor import SimpleCleanPreprocessor
 from ianswer.processor.processor import ProcessPipeline
-from ianswer.processor.segmenter import SimpleSegmenter
-from ianswer.resources import TEST_DATA_FOLDER
+from ianswer.processor.segmenter import NewLineSegmenter
 
 
-def getDefaultModel():
-    pipeline = [SimpleSegmenter(tag='Paragraph'),
-                SimplePreprocessor()
+def getDefaultModel(path):
+    pipeline = [NewLineSegmenter(tag='Paragraph'),
+                SimpleCleanPreprocessor()
                 ]
-    return IModel(root_dir=TEST_DATA_FOLDER,
+    return IModel(root_dir=path,
                   process_pipeline=ProcessPipeline(*pipeline),
                   embedder=GoogleEncoder(),
                   algorithm=SimpleAlgorithm())

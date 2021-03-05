@@ -34,12 +34,14 @@ class Segmenter(Processor):
         pass
 
 
-class SimpleSegmenter(Segmenter):
+class NewLineSegmenter(Segmenter):
     """ Segments given text for every newline character.
     """
     def _segmentLeaf(self, content: ContentLeaf) -> ContentCollection:
         text = content.getText()
-        segmented_text = text.split('\n')
+
+        segments = [x.strip() for x in text.split('\n')]
+        segmented_text = [x for x in segments if x]
 
         content_collection = ContentCollection(tag=content.tag)
         for i, paragraph in enumerate(segmented_text):

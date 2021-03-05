@@ -3,7 +3,7 @@ import os
 from ianswer.content.content import ContentCollection
 from ianswer.content.utils import getContentLeaves
 from ianswer.reader.reader import ReaderTxt
-from ianswer.processor.preprocessor import SimplePreprocessor
+from ianswer.processor.preprocessor import SimpleCleanPreprocessor
 
 
 test_folder = 'test_data'
@@ -20,7 +20,7 @@ class PreprocessorTestCase(unittest.TestCase):
         collection.add(collection1)
         collection.add(collection2)
 
-        pre = SimplePreprocessor()
+        pre = SimpleCleanPreprocessor()
         pre.actOnContent(collection)
 
         leaves = getContentLeaves(collection)

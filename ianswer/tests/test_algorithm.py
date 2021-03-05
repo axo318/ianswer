@@ -2,10 +2,9 @@ import unittest
 import os
 
 from ianswer.algorithm.algorithm import SimpleAlgorithm
-from ianswer.content.content import ContentCollection
 from ianswer.embedder.embedder import GoogleEncoder
-from ianswer.processor.preprocessor import SimplePreprocessor
-from ianswer.processor.segmenter import SimpleSegmenter
+from ianswer.processor.preprocessor import SimpleCleanPreprocessor
+from ianswer.processor.segmenter import NewLineSegmenter
 from ianswer.reader.reader import ReaderTxt
 
 
@@ -21,10 +20,10 @@ class AlgorithmTestCase(unittest.TestCase):
         print('Before segmenting...')
         print(collection)
 
-        seg = SimpleSegmenter(tag='Paragraph')
+        seg = NewLineSegmenter(tag='Paragraph')
         seg.actOnContent(collection)
 
-        preprocessor = SimplePreprocessor()
+        preprocessor = SimpleCleanPreprocessor()
         preprocessor.actOnContent(collection)
 
         emb = GoogleEncoder()

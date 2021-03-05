@@ -1,7 +1,7 @@
 import unittest
 import os
 from ianswer.content.content import ContentCollection
-from ianswer.processor.segmenter import SimpleSegmenter
+from ianswer.processor.segmenter import NewLineSegmenter
 from ianswer.reader.reader import ReaderTxt
 
 
@@ -24,7 +24,7 @@ class PreprocessorTestCase(unittest.TestCase):
         print(collection)
         print()
 
-        seg = SimpleSegmenter(tag='Paragraph')
+        seg = NewLineSegmenter(tag='Paragraph')
         seg.actOnContent(collection[0])
         print('After Segmenting...')
         print(collection)

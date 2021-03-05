@@ -2,7 +2,7 @@ import unittest
 import os
 from ianswer.content.content import ContentCollection
 from ianswer.embedder.embedder import GoogleEncoder
-from ianswer.processor.segmenter import SimpleSegmenter
+from ianswer.processor.segmenter import NewLineSegmenter
 from ianswer.reader.reader import ReaderTxt
 
 
@@ -24,7 +24,7 @@ class EmbedderTestCase(unittest.TestCase):
         print('Before segmenting...')
         print(collection)
 
-        seg = SimpleSegmenter(tag='Paragraph')
+        seg = NewLineSegmenter(tag='Paragraph')
         seg.actOnContent(collection[0])
 
         emb = GoogleEncoder()

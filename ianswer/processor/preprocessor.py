@@ -25,7 +25,8 @@ class PreProcessor(Processor):
         pass
 
 
-class SimplePreprocessor(PreProcessor):
+class SimpleCleanPreprocessor(PreProcessor):
+    """ Cleans text from double spaces, newline characters and any trailing characters """
     def _processLeaf(self, content: Content) -> None:
         text = content.text_data
         text = text.strip().replace('\n', '')

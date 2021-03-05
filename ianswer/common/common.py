@@ -1,4 +1,5 @@
 import datetime
+from textwrap import wrap
 
 
 # UTILS
@@ -55,8 +56,11 @@ class Result:
         self._answer_loc = answer_loc
 
     def __repr__(self):
-        s = f"Result('{self._title}', score={self._score}) [\n"
-        s += f"{self._text}\n]"
+        score = "{:.4f}".format(self._score)
+        s = f"Result('{self._title}', score={score}) [\n"
+
+        paragraph = "\n".join(wrap(self._text))
+        s += f"{paragraph}\n]"
         return s
 
     @property
