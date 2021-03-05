@@ -29,7 +29,8 @@ class AlgorithmTestCase(unittest.TestCase):
 
         emb = GoogleEncoder()
         emb.initialize()
-        alg = SimpleAlgorithm(embedder=emb)
+        alg = SimpleAlgorithm()
+        alg.setEmbedder(emb)
         alg.index(collection)
 
         results = alg.getResults("Where did the Top-Down approach originate?", collection)

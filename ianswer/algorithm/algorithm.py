@@ -7,9 +7,21 @@ from ianswer.embedder.embedder import Embedder
 
 
 class Algorithm(IAnswerObject):
-    """ Abstract Algorithm class. Implement it by subclassing """
+    def __init__(self):
+        """ Abstract Algorithm class. Implement it by subclassing """
+        self._embedder: Embedder = None
 
     # PUBLIC CALLS
+    def setEmbedder(self, embedder: Embedder):
+        """ Sets embedder implementation for use with this algorithm.
+
+        This must be called before indexing or getting results.
+
+        :param embedder:
+        :return:
+        """
+        self._embedder = embedder
+
     def index(self, content: Content):
         """ Indexes content tree for better performance
 
@@ -19,7 +31,7 @@ class Algorithm(IAnswerObject):
         self.info("Indexing content tree...")
         self._index(content)
 
-    def getResults(self, question: str, content: Content, top_n: int = 3) -> List[Result]:
+    def getResults(self, question: str, content: Content, top_n: int) -> List[Result]:
         """ Retrieves the #top_n most likely answers to the given question
 
         :param question: processed question string
@@ -51,15 +63,7 @@ class Algorithm(IAnswerObject):
 
 
 class SimpleAlgorithm(Algorithm):
-    def __init__(self, embedder: Embedder):
-        """ Simplest answer finding algorithm.
-
-        Embeds the whole text in each content leaf and directly compares it against input
-        answer using cosine similarity.
-
-        :param embedder: Embedder object to use for text embeddings
-        """
-        self._embedder = embedder
+    """ Simplest answer finding algorithm. """
 
     def _index(self, content: Content):
         leaves = content.getLeaves()
@@ -87,5 +91,3 @@ class SimpleAlgorithm(Algorithm):
         for leaf, score in sorted_leaf_scores[:top_n]:
             results.append(Result(title=leaf.getTitle(), text=leaf.getText(), score=score))
         return results
-
-
