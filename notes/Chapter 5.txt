@@ -1,0 +1,2904 @@
+
+5 The quantum Fourier transform and its applications
+
+If computers that you build are quantum,
+Then spies everywhere will all want ’em.
+Our codes will all fail,
+And they’ll read our email,
+Till we get crypto that’s quantum, and daunt ’em.
+– Jennifer and Peter Shor
+To read our E-mail, how mean
+of the spies and their quantum machine;
+be comforted though,
+they do not yet know
+how to factorize twelve or ﬁfteen.
+– Volker Strassen
+Computer programming is an art form, like the creation of poetry or music.
+– Donald Knuth
+
+The most spectacular discovery in quantum computing to date is that quantum computers can efﬁciently perform some tasks which are not feasible on a classical computer.
+For example, ﬁnding the prime factorization of an n-bit integer is thought to require
+exp(Θ(n1/3 log2/3 n)) operations using the best classical algorithm known at the time of
+writing, the so-called number ﬁeld sieve. This is exponential in the size of the number being factored, so factoring is generally considered to be an intractable problem on
+a classical computer: it quickly becomes impossible to factor even modest numbers. In
+contrast, a quantum algorithm can accomplish the same task using O(n2 log n log log n)
+operations. That is, a quantum computer can factor a number exponentially faster than
+the best known classical algorithms. This result is important in its own right, but perhaps the most exciting aspect is the question it raises: what other problems can be done
+efﬁciently on a quantum computer which are infeasible on a classical computer?
+In this chapter we develop the quantum Fourier transform, which is the key ingredient
+for quantum factoring and many other interesting quantum algorithms. The quantum
+Fourier transform, with which we begin in Section 5.1, is an efﬁcient quantum algorithm
+for performing a Fourier transform of quantum mechanical amplitudes. It does not speed
+up the classical task of computing Fourier transforms of classical data. But one important
+task which it does enable is phase estimation, the approximation of the eigenvalues of
+a unitary operator under certain circumstances, as described in Section 5.2. This allows
+us to solve several other interesting problems, including the order-ﬁnding problem and
+the factoring problem, which are covered in Section 5.3. Phase estimation can also be
+combined with the quantum search algorithm to solve the problem of counting solutions
+to a search problem, as described in the next chapter. Section 5.4 concludes the chapter
+with a discussion of how the quantum Fourier transform may be used to solve the hidden
+
+The quantum Fourier transform
+
+217
+
+subgroup problem, a generalization of the phase estimation and order-ﬁnding problems
+that has among its special cases an efﬁcient quantum algorithm for the discrete logarithm
+problem, another problem thought to be intractable on a classical computer.
+
+5.1 The quantum Fourier transform
+A good idea has a way of becoming simpler and solving problems other than
+that for which it was intended.
+– Robert Tarjan
+
+One of the most useful ways of solving a problem in mathematics or computer science
+is to transform it into some other problem for which a solution is known. There are a
+few transformations of this type which appear so often and in so many different contexts
+that the transformations are studied for their own sake. A great discovery of quantum
+computation has been that some such transformations can be computed much faster on
+a quantum computer than on a classical computer, a discovery which has enabled the
+construction of fast algorithms for quantum computers.
+One such transformation is the discrete Fourier transform. In the usual mathematical
+notation, the discrete Fourier transform takes as input a vector of complex numbers,
+x0 , . . . , xN −1 where the length N of the vector is a ﬁxed parameter. It outputs the
+transformed data, a vector of complex numbers y0 , . . . , yN −1 , deﬁned by
+1
+yk ≡ √
+N
+
+N −1
+
+xj e2πijk/N .
+
+(5.1)
+
+j=0
+
+The quantum Fourier transform is exactly the same transformation, although the
+conventional notation for the quantum Fourier transform is somewhat different. The
+quantum Fourier transform on an orthonormal basis |0, . . . , |N − 1 is deﬁned to be a
+linear operator with the following action on the basis states,
+1
+|j −→ √
+N
+
+N −1
+
+e2πijk/N |k .
+
+(5.2)
+
+k=0
+
+Equivalently, the action on an arbitrary state may be written
+N −1
+
+N −1
+
+xj |j −→
+j=0
+
+yk |k ,
+
+(5.3)
+
+k=0
+
+where the amplitudes yk are the discrete Fourier transform of the amplitudes xj . It is not
+obvious from the deﬁnition, but this transformation is a unitary transformation, and thus
+can be implemented as the dynamics for a quantum computer. We shall demonstrate
+the unitarity of the Fourier transform by constructing a manifestly unitary quantum
+circuit computing the Fourier transform. It is also easy to prove directly that the Fourier
+transform is unitary:
+Exercise 5.1: Give a direct proof that the linear transformation deﬁned by
+Equation (5.2) is unitary.
+Exercise 5.2: Explicitly compute the Fourier transform of the n qubit state |00 . . . 0.
+
+218
+
+The quantum Fourier transform and its applications
+
+In the following, we take N = 2n , where n is some integer, and the basis |0, . . . , |2n −
+1 is the computational basis for an n qubit quantum computer. It is helpful to write the
+state |j using the binary representation j = j1 j2 . . . jn . More formally, j = j1 2n−1 +
+j2 2n−2 + · · · + jn 20 . It is also convenient to adopt the notation 0.jl jl+1 . . . jm to represent
+the binary fraction jl /2 + jl+1 /4 + · · · + jm /2m−l+1 .
+With a little algebra the quantum Fourier transform can be given the following useful
+product representation:
+
+
+
+
+
+|0 + e2πi0.jn |1 |0 + e2πi0.jn−1 jn |1 · · · |0 + e2πi0.j1 j2 ···jn |1
+|j1 , . . . , jn  →
+.
+2n/2
+(5.4)
+This product representation is so useful that you may even wish to consider this to be the
+deﬁnition of the quantum Fourier transform. As we explain shortly this representation
+allows us to construct an efﬁcient quantum circuit computing the Fourier transform, a
+proof that the quantum Fourier transform is unitary, and provides insight into algorithms
+based upon the quantum Fourier transform. As an incidental bonus we obtain the classical
+fast Fourier transform, in the exercises!
+The equivalence of the product representation (5.4) and the deﬁnition (5.2) follows
+from some elementary algebra:
+|j →
+=
+
+=
+
+=
+=
+
+1
+2n/2
+
+n
+2
+−1
+
+k=0
+
+1
+1 
+
+2n/2
+
+...
+
+k1 =0
+
+1
+1 
+
+2n/2
+
+n
+
+e2πijk/2 |k
+
+k1 =0
+
+1
+
+
+1
+2n/2
+
+
+l=1
+n
+
+
+2πij
+
+ n
+l=1
+
+kl 2−l
+
+
+
+|k1 . . . kn 
+
+(5.6)
+
+kn =0
+
+...
+
+1 
+n
+
+
+−l
+
+e2πijkl 2 |kl 
+
+(5.7)
+
+kn =0 l=1
+
+n
+1
+1  
+
+2n/2
+
+e
+
+(5.5)
+
+−l
+
+e2πijkl 2 |kl 
+
+(5.8)
+
+kl =0
+−l
+
+|0 + e2πij2 |1
+
+l=1
+
+|0 + e2πi0.jn |1
+
+
+
+(5.9)
+
+
+
+
+|0 + e2πi0.jn−1 jn |1 · · · |0 + e2πi0.j1 j2 ···jn |1
+
+.(5.10)
+2n/2
+The product representation (5.4) makes it easy to derive an efﬁcient circuit for the
+quantum Fourier transform. Such a circuit is shown in Figure 5.1. The gate Rk denotes
+the unitary transformation
+=
+
+Rk ≡
+
+1
+0
+2πi/2k
+0 e
+
+.
+
+(5.11)
+
+To see that the pictured circuit computes the quantum Fourier transform, consider what
+happens when the state |j1 . . . jn  is input. Applying the Hadamard gate to the ﬁrst bit
+produces the state
+
+1 
+2πi0.j1
+|0
++
+e
+|1
+|j2 . . . jn  ,
+(5.12)
+21/2
+
+The quantum Fourier transform
+
+219
+
+Figure 5.1. Efﬁcient circuit for the quantum Fourier transform. This circuit is easily derived from the product
+representation (5.4) for the quantum Fourier transform. Not shown
+are swap gates at the end of the circuit which
+√
+reverse the order of the qubits, or normalization factors of 1/ 2 in the output.
+
+since e2πi0.j1 = −1 when j1 = 1, and is +1 otherwise. Applying the controlled-R2 gate
+produces the state
+(
+1 '
+|0 + e2πi0.j1 j2 |1 |j2 . . . jn  .
+(5.13)
+1/2
+2
+We continue applying the controlled-R3 , R4 through Rn gates, each of which adds an
+extra bit to the phase of the co-efﬁcient of the ﬁrst |1. At the end of this procedure we
+have the state
+(
+1 '
+2πi0.j1 j2 ...jn
+|0
++
+e
+|1
+|j2 . . . jn  .
+(5.14)
+21/2
+Next, we perform a similar procedure on the second qubit. The Hadamard gate puts us
+in the state
+('
+(
+1 '
+2πi0.j1 j2 ...jn
+2πi0.j2
+|0
++
+e
+|1
+|0
++
+e
+|1
+|j3 . . . jn  ,
+(5.15)
+22/2
+and the controlled-R2 through Rn−1 gates yield the state
+('
+(
+1 '
+2πi0.j1 j2 ...jn
+2πi0.j2 ...jn
+|0
++
+e
+|1
+|0
++
+e
+|1
+|j3 . . . jn .
+(5.16)
+22/2
+We continue in this fashion for each qubit, giving a ﬁnal state
+('
+(
+'
+(
+1 '
+2πi0.j1 j2 ...jn
+2πi0.j2 ...jn
+2πi0.jn
+|0
++
+e
+|1
+|0
++
+e
+|1
+.
+.
+.
+|0
++
+e
+|1
+. (5.17)
+2n/2
+Swap operations (see Section 1.3.4 for a description of the circuit), omitted from Figure 5.1 for clarity, are then used to reverse the order of the qubits. After the swap
+operations, the state of the qubits is
+('
+(
+'
+(
+1 '
+2πi0.jn
+2πi0.jn−1 jn
+2πi0.j1 j2 ···jn
+|0
++
+e
+|1
+|0
++
+e
+|1
+.
+.
+.
+|0
++
+e
+|1
+. (5.18)
+2n/2
+Comparing with Equation (5.4) we see that this is the desired output from the quantum
+Fourier transform. This construction also proves that the quantum Fourier transform is
+unitary, since each gate in the circuit is unitary. An explicit example showing a circuit
+for the quantum Fourier transform on three qubits is given in Box 5.1.
+How many gates does this circuit use? We start by doing a Hadamard gate and n − 1
+conditional rotations on the ﬁrst qubit – a total of n gates. This is followed by a Hadamard
+gate and n − 2 conditional rotations on the second qubit, for a total of n + (n − 1) gates.
+Continuing in this way, we see that n + (n − 1) + · · · + 1 = n(n + 1)/2 gates are required,
+
+220
+
+The quantum Fourier transform and its applications
+
+Box 5.1: Three qubit quantum Fourier transform
+For concreteness it may help to look at the explicit circuit for the three qubit
+quantum Fourier transform:
+
+Recall that S and T are the phase and π/8 gates (see page xxiii). As a matrix the
+quantum Fourier
+√ transform in this instance may be written out explicitly, using
+ω = e2πi/8 = i, as
+⎡1 1
+1
+1
+1
+1
+1
+1 ⎤
+⎢1
+⎢
+⎢1
+⎢
+1 ⎢
+1
+√ ⎢
+⎢1
+8⎢
+⎢1
+⎢
+⎣1
+1
+
+ω
+ω2
+ω3
+ω4
+ω5
+ω6
+ω7
+
+ω2
+ω4
+ω6
+1
+ω2
+ω4
+ω6
+
+ω3
+ω6
+ω1
+ω4
+ω7
+ω2
+ω5
+
+ω4
+1
+ω4
+1
+ω4
+1
+ω4
+
+ω5
+ω2
+ω7
+ω4
+ω1
+ω6
+ω3
+
+ω6
+ω4
+ω2
+1
+ω6
+ω4
+ω2
+
+ω7 ⎥
+⎥
+ω6 ⎥
+⎥
+ω5 ⎥
+⎥.
+ω4 ⎥
+⎥
+ω3 ⎥
+⎥
+ω2 ⎦
+ω1
+
+(5.19)
+
+plus the gates involved in the swaps. At most n/2 swaps are required, and each swap
+can be accomplished using three controlledgates. Therefore, this circuit provides a
+Θ(n2 ) algorithm for performing the quantum Fourier transform.
+In contrast, the best classical algorithms for computing the discrete Fourier transform
+on 2n elements are algorithms such as the Fast Fourier Transform (FFT), which compute the discrete Fourier transform using Θ(n2n ) gates. That is, it requires exponentially
+more operations to compute the Fourier transform on a classical computer than it does
+to implement the quantum Fourier transform on a quantum computer.
+At face value this sounds terriﬁc, since the Fourier transform is a crucial step in so many
+real-world data processing applications. For example, in computer speech recognition,
+the ﬁrst step in phoneme recognition is to Fourier transform the digitized sound. Can
+we use the quantum Fourier transform to speed up the computation of these Fourier
+transforms? Unfortunately, the answer is that there is no known way to do this. The
+problem is that the amplitudes in a quantum computer cannot be directly accessed by
+measurement. Thus, there is no way of determining the Fourier transformed amplitudes
+of the original state. Worse still, there is in general no way to efﬁciently prepare the
+original state to be Fourier transformed. Thus, ﬁnding uses for the quantum Fourier
+transform is more subtle than we might have hoped. In this and the next chapter we
+develop several algorithms based upon a more subtle application of the quantum Fourier
+transform.
+
+Phase estimation
+
+221
+
+Exercise 5.3: (Classical fast Fourier transform) Suppose we wish to perform a
+Fourier transform of a vector containing 2n complex numbers on a classical
+computer. Verify that the straightforward method for performing the Fourier
+transform, based upon direct evaluation of Equation (5.1) requires Θ(22n )
+elementary arithmetic operations. Find a method for reducing this to Θ(n2n )
+operations, based upon Equation (5.4).
+Exercise 5.4: Give a decomposition of the controlled-Rk gate into single qubit and
+gates.
+Exercise 5.5: Give a quantum circuit to perform the inverse quantum Fourier
+transform.
+Exercise 5.6: (Approximate quantum Fourier transform) The quantum circuit
+construction of the quantum Fourier transform apparently requires gates of
+exponential precision in the number of qubits used. However, such precision is
+never required in any quantum circuit of polynomial size. For example, let U be
+the ideal quantum Fourier transform on n qubits, and V be the transform which
+results if the controlled-Rk gates are performed to a precision Δ = 1/p(n) for
+some polynomial p(n). Show that the error E(U, V ) ≡ max|ψ (U − V )|ψ
+scales as Θ(n2 /p(n)), and thus polynomial precision in each gate is sufﬁcient to
+guarantee polynomial accuracy in the output state.
+
+5.2 Phase estimation
+The Fourier transform is the key to a general procedure known as phase estimation,
+which in turn is the key for many quantum algorithms. Suppose a unitary operator U
+has an eigenvector |u with eigenvalue e2πiϕ , where the value of ϕ is unknown. The goal
+of the phase estimation algorithm is to estimate ϕ. To perform the estimation we assume
+that we have available black boxes (sometimes known as oracles) capable of preparing the
+j
+state |u and performing the controlled-U 2 operation, for suitable non-negative integers
+j. The use of black boxes indicates that the phase estimation procedure is not a complete
+quantum algorithm in its own right. Rather, you should think of phase estimation as a
+kind of ‘subroutine’ or ‘module’ that, when combined with other subroutines, can be
+used to perform interesting computational tasks. In speciﬁc applications of the phase
+estimation procedure we shall do exactly this, describing how these black box operations
+are to be performed, and combining them with the phase estimation procedure to do
+genuinely useful tasks. For the moment, though, we will continue to imagine them as
+black boxes.
+The quantum phase estimation procedure uses two registers. The ﬁrst register contains
+t qubits initially in the state |0. How we choose t depends on two things: the number
+of digits of accuracy we wish to have in our estimate for ϕ, and with what probability
+we wish the phase estimation procedure to be successful. The dependence of t on these
+quantities emerges naturally from the following analysis.
+The second register begins in the state |u, and contains as many qubits as is necessary
+to store |u. Phase estimation is performed in two stages. First, we apply the circuit shown
+in Figure 5.2. The circuit begins by applying a Hadamard transform to the ﬁrst register,
+followed by application of controlled-U operations on the second register, with U raised
+
+222
+
+The quantum Fourier transform and its applications
+
+to successive powers of two. The ﬁnal state of the ﬁrst register is easily seen to be:
+('
+(
+'
+(
+1 '
+2πi2t−1 ϕ
+2πi2t−2 ϕ
+2πi20 ϕ
+|0
++
+e
+|1
+|0
++
+e
+|1
+.
+.
+.
+|0
++
+e
+|1
+2t/2
+=
+
+2t −1
+
+1
+2t/2
+
+e2πiϕk |k .
+
+(5.20)
+
+k=0
+
+We omit the second register from this description, since it stays in the state |u throughout
+the computation.
+⎧
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+First register ⎨
+t qubits
+
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎩
+
+⎧
+⎪
+⎨
+Second register ⎩
+
+|0
+
+H
+
+|0
+
+H
+
+|0
+
+H
+
+|0
+
+H
+
+|u
+
+···
+
+•
+•
+•
+
+U2
+
+0
+
+U2
+
+1
+
+U2
+
+2
+
+t−1 ϕ)
+
+|0
+
+e2πi(2
+
+···
+
+|0
+
+e2πi(2
+
+···
+
+|0
+
+e2πi(2
+
+···
+
+|0
+
+e2πi(2
+
+···
+
+•
+
+U2
+
+t−1
+
+|1
+
+2 ϕ)
+
+|1
+
+1 ϕ)
+
+|1
+
+0 ϕ)
+
+|1
+
+|u
+
+√
+Figure 5.2. The ﬁrst stage of the phase estimation procedure. Normalization factors of 1/ 2 have been omitted, on
+the right.
+
+Exercise 5.7: Additional insight into the circuit in Figure 5.2 may be obtained by
+showing, as you should now do, that the effect of the sequence of controlled-U
+operations like that in Figure 5.2 is to take the state |j|u to |jU j |u. (Note
+that this does not depend on |u being an eigenstate of U .)
+The second stage of phase estimation is to apply the inverse quantum Fourier transform
+on the ﬁrst register. This is obtained by reversing the circuit for the quantum Fourier
+transform in the previous section (Exercise 5.5), and can be done in Θ(t2 ) steps. The
+third and ﬁnal stage of phase estimation is to read out the state of the ﬁrst register by
+doing a measurement in the computational basis. We will show that this provides a pretty
+good estimate of ϕ. An overall schematic of the algorithm is shown in Figure 5.3.
+To sharpen our intuition as to why phase estimation works, suppose ϕ may be expressed exactly in t bits, as ϕ = 0.ϕ1 . . . ϕt . Then the state (5.20) resulting from the ﬁrst
+stage of phase estimation may be rewritten
+('
+(
+'
+(
+1 '
+2πi0.ϕt
+2πi0.ϕt−1 ϕt
+2πi0.ϕ1 ϕ2 ···ϕt
+|0
++
+e
+|1
+|0
++
+e
+|1
+.
+.
+.
+|0
++
+e
+|1
+. (5.21)
+2t/2
+The second stage of phase estimation is to apply the inverse quantum Fourier transform.
+But comparing the previous equation with the product form for the Fourier transform,
+Equation (5.4), we see that the output state from the second stage is the product state
+|ϕ1 . . . ϕt . A measurement in the computational basis therefore gives us ϕ exactly!
+
+Phase estimation
+
+223
+
+_ _ _ _ _ _ L _ _ 
+
+
+
+
+
+
+_ _ _ _ _  _ _ _ 
+
+Figure 5.3. Schematic of the overall phase estimation procedure. The top t qubits (the ‘/’ denotes a bundle of
+wires, as usual) are the ﬁrst register, and the bottom qubits are the second register, numbering as many as required
+2πiϕ . The output of the measurement is an
+to perform U . |u is an eigenstate of2U with eigenvalue
+3 e
+1
+approximation to ϕ accurate to t − log 2 + 2
+bits, with probability of success at least 1 − .
+
+Summarizing, the phase estimation algorithm allows one to estimate the phase ϕ of an
+eigenvalue of a unitary operator U , given the corresponding eigenvector |u. An essential
+feature at the heart of this procedure is the ability of the inverse Fourier transform to
+perform the transformation
+2t −1
+
+1
+2t/2
+
+e2πiϕj |j|u → |ϕ̃|u ,
+
+(5.22)
+
+j=0
+
+where |ϕ̃ denotes a state which is a good estimator for ϕ when measured.
+5.2.1 Performance and requirements
+The above analysis applies to the ideal case, where ϕ can be written exactly with a t
+bit binary expansion. What happens when this is not the case? It turns out that the
+procedure we have described will produce a pretty good approximation to ϕ with high
+probability, as foreshadowed by the notation used in (5.22). Showing this requires some
+careful manipulations.
+Let b be the integer in the range 0 to 2t − 1 such that b/2t = 0.b1 . . . bt is the best t bit
+approximation to ϕ which is less than ϕ. That is, the difference δ ≡ ϕ − b/2t between
+ϕ and b/2t satisﬁes 0 ≤ δ ≤ 2−t . We aim to show that the observation at the end of
+the phase estimation procedure produces a result which is close to b, and thus enables us
+to estimate ϕ accurately, with high probability. Applying the inverse quantum Fourier
+transform to the state (5.20) produces the state
+1
+2t
+
+2t −1
+
+e
+
+−2πikl
+2t
+
+e2πiϕk |l .
+
+(5.23)
+
+k,l=0
+
+Let αl be the amplitude of |(b + l)(mod 2t ),
+1
+αl ≡ t
+2
+
+2t −1 '
+
+t
+
+e2πi(ϕ−(b+l)/2
+
+)
+
+(k
+
+.
+
+(5.24)
+
+k=0
+
+This is the sum of a geometric series, so
+
+
+t
+1
+1 − e2πi(2 ϕ−(b+l))
+αl = t
+2 1 − e2πi(ϕ−(b+l)/2t )
+
+(5.25)
+
+224
+
+The quantum Fourier transform and its applications
+
+1
+= t
+2
+
+
+
+1 − e2πi(2 δ−l)
+1 − e2πi(δ−l/2t )
+t
+
+
+
+.
+
+(5.26)
+
+Suppose the outcome of the ﬁnal measurement is m. We aim to bound the probability of
+obtaining a value of m such that |m − b| > e, where e is a positive integer characterizing
+our desired tolerance to error. The probability of observing such an m is given by
+p(|m − b| > e) =
+
+|αl |2 +
+−2t−1 <l≤−(e+1)
+
+|αl |2 .
+
+(5.27)
+
+e+1≤l≤2t−1
+
+But for any real θ, |1 − exp(iθ)| ≤ 2, so
+|αl | ≤
+
+2
+.
+2t |1 − e2πi(δ−l/2t ) |
+
+(5.28)
+
+By elementary geometry or calculus |1 − exp(iθ)| ≥ 2|θ|/π whenever −π ≤ θ ≤ π. But
+when −2t−1 < l ≤ 2t−1 we have −π ≤ 2π(δ − l/2t ) ≤ π. Thus
+|αl | ≤
+
+2t+1 (δ
+
+1
+.
+− l/2t )
+
+Combining (5.27) and (5.29) gives
+⎡
+⎤
+−(e+1)
+2t−1
+1⎣
+1
+1
+⎦.
+p(|m − b| > e) ≤
++
+4 l=−2t−1 +1 (l − 2t δ)2 l=e+1 (l − 2t δ)2
+Recalling that 0 ≤ 2t δ ≤ 1, we obtain
+
+⎡
+1⎣
+p(|m − b| > e) ≤
+4
+
+−(e+1)
+
+l=−2t−1 +1
+
+≤
+
+1
+2
+
+2t−1 −1
+
+-
+
+l=e
+
+⎤
+2t−1
+1
+1 ⎦
++
+l2 l=e+1 (l − 1)2
+
+1
+l2
+
+2t−1 −1
+
+≤
+
+1
+2
+
+=
+
+1
+.
+2(e − 1)
+
+e−1
+
+(5.29)
+
+(5.30)
+
+(5.31)
+
+(5.32)
+dl
+
+1
+l2
+
+(5.33)
+(5.34)
+
+Suppose we wish to approximate ϕ to an accuracy 2−n , that is, we choose e = 2t−n − 1.
+By making use of t = n + p qubits in the phase estimation algorithm we see from (5.34)
+that the probability of obtaining an approximation correct to this accuracy is at least
+1 − 1/2(2p − 2). Thus to successfully obtain ϕ accurate to n bits with probability of
+success at least 1 − we choose
+4 
+5
+1
+t = n + log 2 +
+.
+(5.35)
+2
+In order to make use of the phase estimation algorithm, we need to be able to prepare an
+eigenstate |u of U . What if we do not know how to prepare such an eigenstate? Suppose
+that we prepare some other state |ψ in place of |u. Expanding this state in terms of
+
+eigenstates |u of U gives |ψ = u cu |u. Suppose the eigenstate |u has eigenvalue
+e2πiϕu . Intuitively, the result of running the phase estimation algorithm will be to give
+
+Phase estimation
+
+225
+
+
+6u |u, where ϕ
+6u is a pretty good approximation to the
+as output a state close to u cu |ϕ
+phase ϕu . Therefore, we expect that reading out the ﬁrst register will give us a good
+approximation to ϕu , where u is chosen at random with probability |cu |2 . Making this
+argument rigorous is left for Exercise 5.8. This procedure allows us to avoid preparing
+a (possibly unknown) eigenstate, at the cost of introducing some additional randomness
+into the algorithm.
+
+Exercise 5.8: Suppose the phase estimation algorithm takes the state |0|u to the
+
+6u |u, so that given the input |0
+state |ϕ
+u cu |u , the algorithm outputs
+
+6u |u. Show that if t is chosen according to (5.35), then the probability
+u cu |ϕ
+for measuring ϕu accurate to n bits at the conclusion of the phase estimation
+algorithm is at least |cu |2 (1 − ).
+Why is phase estimation interesting? For its own sake, phase estimation solves a problem which is both non-trivial and interesting from a physical point of view: how to
+estimate the eigenvalue associated to a given eigenvector of a unitary operator. Its real
+use, though, comes from the observation that other interesting problems can be reduced
+to phase estimation, as will be shown in subsequent sections. The phase estimation algorithm is summarized below.
+Algorithm: Quantum phase estimation
+Inputs: (1) A black box wich performs a controlled-U j operation,2 for integer j,
+3
+(2) an eigenstate |u of U with eigenvalue e2πiϕu , and (3) t = n + log 2 + 21
+qubits initialized to |0.
+6u to ϕu .
+Outputs: An n-bit approximation ϕ
+
+Runtime: O(t2 ) operations and one call to controlled-U j black box. Succeeds
+with probability at least 1 − .
+Procedure:
+1.
+2.
+3.
+
+|0|u
+1
+→√
+2t
+1
+→√
+2t
+
+initial state
+2t −1
+j=0
+2t −1
+
+|j|u
+
+create superposition
+
+|jU j |u
+
+apply black box
+
+j=0
+
+1
+=√
+2t
+
+2t −1
+
+e2πijϕu |j|u
+
+result of black box
+
+j=0
+
+4.
+
+6u |u
+→ |ϕ
+
+apply inverse Fourier transform
+
+5.
+
+6u
+→ϕ
+
+measure ﬁrst register
+
+Exercise 5.9: Let U be a unitary transform with eigenvalues ±1, which acts on a state
+|ψ. Using the phase estimation procedure, construct a quantum circuit to
+collapse |ψ into one or the other of the two eigenspaces of U , giving also a
+
+226
+
+The quantum Fourier transform and its applications
+
+classical indicator as to which space the ﬁnal state is in. Compare your result
+with Exercise 4.34.
+
+5.3 Applications: order-ﬁnding and factoring
+The phase estimation procedure can be used to solve a variety of interesting problems. We
+now describe two of the most interesting of these problems: the order-ﬁnding problem,
+and the factoring problem. These two problems are, in fact, equivalent to one another, so
+in Section 5.3.1 we explain a quantum algorithm for solving the order-ﬁnding problem,
+and in Section 5.3.2 we explain how the order-ﬁnding problem implies the ability to
+factor as well.
+To understand the quantum algorithms for factoring and order-ﬁnding requires a
+little background in number theory. All the required materials are collected together in
+Appendix 4. The description we give over the next two sections focuses on the quantum
+aspects of the problem, and requires only a little familiarity with modular arithmetic to
+be readable. Detailed proofs of the number-theoretic results we quote here may be found
+in Appendix 4.
+The fast quantum algorithms for order-ﬁnding and factoring are interesting for at least
+three reasons. First, and most important in our opinion, they provide evidence for the idea
+that quantum computers may be inherently more powerful than classical computers, and
+provide a credible challenge to the strong Church–Turing thesis. Second, both problems
+are of sufﬁcient intrinsic worth to justify interest in any novel algorithm, be it classical
+or quantum. Third, and most important from a practical standpoint, efﬁcient algorithms
+for order-ﬁnding and factoring can be used to break the RSA public-key cryptosystem
+(Appendix 5).
+5.3.1 Application: order-ﬁnding
+For positive integers x and N , x < N , with no common factors, the order of x modulo N
+is deﬁned to be the least positive integer, r, such that xr = 1(mod N ). The order-ﬁnding
+problem is to determine the order for some speciﬁed x and N . Order-ﬁnding is believed
+to be a hard problem on a classical computer, in the sense that no algorithm is known
+to solve the problem using resources polynomial in the O(L) bits needed to specify the
+problem, where L ≡ log(N ) is the number of bits needed to specify N . In this section
+we explain how phase estimation may be used to obtain an efﬁcient quantum algorithm
+for order-ﬁnding.
+Exercise 5.10: Show that the order of x = 5 modulo N = 21 is 6.
+Exercise 5.11: Show that the order of x satisﬁes r ≤ N .
+The quantum algorithm for order-ﬁnding is just the phase estimation algorithm applied
+to the unitary operator
+U |y ≡ |xy(mod N ) ,
+
+(5.36)
+
+with y ∈ {0, 1}L . (Note that here and below, when N ≤ y ≤ 2L − 1, we use the
+convention that xy(mod N ) is just y again. That is, U only acts non-trivially when
+
+Applications: order-ﬁnding and factoring
+
+0 ≤ y ≤ N − 1.) A simple calculation shows that the states deﬁned by
+
+
+r−1
+1
+−2πisk
+exp
+|xk mod N  ,
+|us  ≡ √
+r k=0
+r
+for integer 0 ≤ s ≤ r − 1 are eigenstates of U , since
+
+
+r−1
+1
+−2πisk
+U |us  = √
+exp
+|xk+1 mod N 
+r k=0
+r
+
+
+2πis
+= exp
+|us  .
+r
+
+227
+
+(5.37)
+
+(5.38)
+(5.39)
+
+Using the phase estimation procedure allows us to obtain, with high accuracy, the corresponding eigenvalues exp(2πis/r), from which we can obtain the order r with a little
+bit more work.
+Exercise 5.12: Show that U is unitary (Hint: x is co-prime to N , and therefore has
+an inverse modulo N ).
+There are two important requirements for us to be able to use the phase estimation
+j
+procedure: we must have efﬁcient procedures to implement a controlled-U 2 operation
+for any integer j, and we must be able to efﬁciently prepare an eigenstate |us  with a nontrivial eigenvalue, or at least a superposition of such eigenstates. The ﬁrst requirement
+is satisﬁed by using a procedure known as modular exponentiation, with which we
+j
+can implement the entire sequence of controlled-U 2 operations applied by the phase
+estimation procedure using O(L3 ) gates, as described in Box 5.2.
+The second requirement is a little tricker: preparing |us  requires that we know r, so
+this is out of the question. Fortunately, there is a clever observation which allows us to
+circumvent the problem of preparing |us , which is that
+1
+√
+r
+
+r−1
+
+|us  = |1 .
+
+(5.44)
+
+s=0
+
+2
+3
+In performing the phase estimation procedure, if we use t = 2L + 1 + log 2 + 21
+qubits in the ﬁrst register (referring to Figure 5.3), and prepare the second register in
+the state |1 – which is trivial to construct – it follows that for each s in the range 0
+through r − 1, we will obtain an estimate of the phase ϕ ≈ s/r accurate to 2L + 1 bits,
+with probability at least (1 − )/r. The order-ﬁnding algorithm is schematically depicted
+in Figure 5.4.
+
+Exercise 5.13: Prove (5.44). (Hint:
+1
+√
+r
+
+r−1
+
+r−1
+s=0
+
+exp(−2πisk/r) = rδk0 .) In fact, prove that
+
+e2πisk/r |us  = |xk mod N  .
+
+(5.45)
+
+s=0
+
+Exercise 5.14: The quantum state produced in the order-ﬁnding algorithm, before
+the inverse Fourier transform, is
+2t −1
+
+j
+
+2t −1
+
+|jU |1 =
+
+|ψ =
+j=0
+
+j=0
+
+|j|xj mod N  ,
+
+(5.46)
+
+228
+
+The quantum Fourier transform and its applications
+
+Box 5.2: Modular exponentiation
+j
+
+How can we compute the sequence of controlled-U 2 operations used by the phase
+estimation procedure as part of the order-ﬁnding algorithm? That is, we wish to
+compute the transformation
+|z|y → |zU zt2
+
+t−1
+
+= |z|xzt 2
+
+t−1
+
+. . . U z12 |y
+0
+
+(5.40)
+
+× · · · × xz1 2 y(mod N )
+0
+
+z
+
+= |z|x y(mod N ).
+
+(5.41)
+(5.42)
+
+j
+
+Thus the sequence of controlled-U 2 operations used in phase estimation is equivalent to multiplying the contents of the second register by the modular exponential
+xz (mod N ), where z is the contents of the ﬁrst register. This operation may be
+accomplished easily using the techniques of reversible computation. The basic idea
+is to reversibly compute the function xz (mod N ) of z in a third register, and then
+to reversibly multiply the contents of the second register by xz (mod N ), using the
+trick of uncomputation to erase the contents of the third register upon completion.
+The algorithm for computing the modular exponential has two stages. The ﬁrst stage
+uses modular multiplication to compute x2 (mod N ), by squaring x modulo N , then
+computes x4 (mod N ) by squaring x2 (mod N ), and continues in this way, computing
+j
+x2 (mod N ) for all j up to t − 1. We use t = 2L + 1 + log(2 + 1/(2 )) = O(L),
+so a total of t − 1 = O(L) squaring operations is performed at a cost of O(L2 )
+each (this cost assumes the circuit used to do the squaring implements the familiar
+algorithm we all learn as children for multiplication), for a total cost of O(L3 ) for
+the ﬁrst stage. The second stage of the algorithm is based upon the observation
+we’ve already noted,
+'
+('
+(
+'
+(
+t−1
+t−2
+0
+xz (mod N ) = xzt 2 (mod N ) xzt−1 2 (mod N ) . . . xz1 2 (mod N ) .
+(5.43)
+Performing t − 1 modular multiplications with a cost O(L2 ) each, we see that this
+product can be computed using O(L3 ) gates. This is sufﬁciently efﬁcient for our
+purposes, but more efﬁcient algorithms are possible based on more efﬁcient algorithms for multiplication (see ‘History and further reading’). Using the techniques
+of Section 3.2.5, it is now straightforward to construct a reversible circuit with a
+t bit register and an L bit register which, when started in the state (z, y) outputs
+(z, xz y (mod N )), using O(L3 ) gates, which can be translated into a quantum circuit
+using O(L3 ) gates computing the transformation |z|y → |z|xz y (mod N ).
+
+if we initialize the second register as |1. Show that the same state is obtained if
+we replace U j with a different unitary transform V , which computes
+V |j|k = |j|k + xj mod N  ,
+
+(5.47)
+
+and start the second register in the state |0. Also show how to construct V using
+O(L3 ) gates.
+
+Applications: order-ﬁnding and factoring
+
+Register 1
+t qubits
+
+|0  /
+
+Register 2
+|1  /
+L qubits
+
+H ⊗t
+
+|j
+
+•
+
+FT†
+
+229
+
+_ _ _ _ _ _ L _ _ 
+
+
+
+
+
+
+_ _ _ _ _  _ _ _ 
+
+xj mod N
+
+Figure 5.4. Quantum circuit for the order-ﬁnding algorithm. The second register is shown as being initialized to
+the |1 state, but if the method of Exercise 5.14 is used, it can be initialized to |0 instead. This circuit can also be
+used for factoring, using the reduction given in Section 5.3.2.
+
+The continued fraction expansion
+The reduction of order-ﬁnding to phase estimation is completed by describing how to
+obtain the desired answer, r, from the result of the phase estimation algorithm, ϕ ≈ s/r.
+We only know ϕ to 2L + 1 bits, but we also know a priori that it is a rational number
+– the ratio of two bounded integers – and if we could compute the nearest such fraction
+to ϕ we might obtain r.
+Remarkably, there is an algorithm which accomplishes this task efﬁciently, known as
+the continued fractions algorithm. An example of how this works is described in Box 5.3.
+The reason this algorithm satisﬁes our needs is the following theorem, which is proved
+in Appendix 4:
+Theorem 5.1: Suppose s/r is a rational number such that
++s
++
+1
++
++
++ − ϕ+ ≤ 2 .
+r
+2r
+
+(5.48)
+
+Then s/r is a convergent of the continued fraction for ϕ, and thus can be
+computed in O(L3 ) operations using the continued fractions algorithm.
+Since ϕ is an approximation of s/r accurate to 2L + 1 bits, it follows that |s/r − ϕ| ≤
+2−2L−1 ≤ 1/2r2 , since r ≤ N ≤ 2L . Thus, the theorem applies.
+Summarizing, given ϕ the continued fractions algorithm efﬁciently produces numbers
+s and r with no common factor, such that s /r = s/r. The number r is our candidate
+
+for the order. We can check to see whether it is the order by calculating xr mod N , and
+seeing if the result is 1. If so, then r is the order of x modulo N , and we are done!
+Performance
+How can the order-ﬁnding algorithm fail? There are two possibilities. First, the phase
+estimation procedure might produce a bad estimate to s/r. This occurs with probability
+at most , and can be made small with a negligible increase in the size of the circuit.
+More seriously, it might be that s and r have a common factor, in which case the
+number r returned by the continued fractions algorithm be a factor of r, and not r itself.
+Fortunately, there are at least three ways around this problem.
+Perhaps the most straightforward way is to note that for randomly chosen s in the
+range 0 through r − 1, it’s actually pretty likely that s and r are co-prime, in which
+case the continued fractions algorithm must return r. To see that this is the case, note
+that by Problem 4.1 on page 638 the number of prime numbers less than r is at least
+
+230
+
+The quantum Fourier transform and its applications
+
+Box 5.3: The continued fractions algorithm
+The idea of the continued fractions algorithm is to describe real numbers in terms
+of integers alone, using expressions of the form
+[a0 , . . . , aM ] ≡ a0 +
+
+1
+a1 +
+
+,
+
+1
+a2 +
+
+(5.49)
+
+1
+...+ 1
+aM
+
+where a0 , . . . , aM are positive integers. (For applications to quantum computing it
+is convenient to allow a0 = 0 as well.) We deﬁne the mth convergent (0 ≤ m ≤ M )
+to this continued fraction to be [a0 , . . . , am ]. The continued fractions algorithm
+is a method for determining the continued fraction expansion of an arbitrary real
+number. It is easily understood by example. Suppose we are trying to decompose
+31/13 as a continued fraction. The ﬁrst step of the continued fractions algorithm
+is to split 31/13 into its integer and fractional part,
+31
+5
+=2+
+.
+13
+13
+Next we invert the fractional part, obtaining
+
+(5.50)
+
+31
+1
+= 2 + 13 .
+13
+5
+
+(5.51)
+
+These steps – split then invert – are now applied to 13/5, giving
+1
+31
+= 2+
+13
+2+
+
+3
+5
+
+=2+
+
+1
+2+
+
+1
+
+.
+
+(5.52)
+
+5
+3
+
+Next we split and invert 5/3:
+31
+1
+1
+=2+
+.
+= 2+
+1
+13
+2 + 1+ 2
+2 + 1+1 1
+
+(5.53)
+
+3
+2
+
+3
+
+The decomposition into a continued fraction now terminates, since
+1
+3
+= 1+
+(5.54)
+2
+2
+may be written with a 1 in the numerator without any need to invert, giving a ﬁnal
+continued fraction representation of 31/13 as
+1
+31
+=2+
+.
+13
+2 + 1+ 1 1
+
+(5.55)
+
+1+ 1
+2
+
+It’s clear that the continued fractions algorithm terminates after a ﬁnite number
+of ‘split and invert’ steps for any rational number, since the numerators which
+appear (31, 5, 3, 2, 1 in the example) are strictly decreasing. How quickly does this
+termination occur? It turns out that if ϕ = s/r is a rational number, and s and r
+are L bit integers, then the continued fraction expansion for ϕ can be computed
+using O(L3 ) operations – O(L) ‘split and invert’ steps, each using O(L2 ) gates for
+elementary arithmetic.
+
+Applications: order-ﬁnding and factoring
+
+231
+
+r/2 log r, and thus the chance that s is prime (and therefore, co-prime to r) is at least
+1/2 log(r) > 1/2 log(N ). Thus, repeating the algorithm 2 log(N ) times we will, with
+high probability, observe a phase s/r such that s and r are co-prime, and therefore the
+continued fractions algorithm produces r, as desired.
+A second method is to note that if r = r, then r is guaranteed to be a factor of r,
+unless s = 0, which possibility occurs with probability 1/r ≤ 1/2, and which can be
+
+discounted further by a few repetitions. Suppose we replace a by a ≡ ar (mod N ). Then
+the order of a is r/r . We can now repeat the algorithm, and try to compute the order
+of a , which, if we succeed, allows us to compute the order of a, since r = r × r/r .
+If we fail, then we obtain r which is a factor of r/r , and we now try to compute the
+
+order of a ≡ (a )r (mod N ). We iterate this procedure until we determine the order of
+a. At most log(r) = O(L) iterations are required, since each repetition reduces the order
+
+of the current candidate a ... by a factor of at least two.
+The third method is better than the ﬁrst two methods, in that it requires only a
+constant number of trials, rather than O(L) repetitions. The idea is to repeat the phase
+estimation-continued fractions procedure twice, obtaining r1 , s1 the ﬁrst time, and r2 , s2
+the second time. Provided s1 and s2 have no common factors, r may be extracted by
+taking the least common multiple of r1 and r2 . The probability that s1 and s2 have no
+common factors is given by
+p(q|s1 )p(q|s2 ) ,
+
+1−
+
+(5.56)
+
+q
+
+where the sum is over all prime numbers q, and p(x|y) here means the probability of x
+dividing y. If q divides s1 then it must also divide the true value of s, s1 , on the ﬁrst
+iteration, so to upper bound p(q|s1 ) it sufﬁces to upper bound p(q|s1 ), where s1 is chosen
+uniformly at random from 0 through r − 1. It is easy to see that p(q|s1 ) ≤ 1/q, and thus
+p(q|s1 ) ≤ 1/q. Similarly, p(q|s2 ) ≤ 1/q, and thus the probability that s1 and s2 have no
+common factors satisﬁes
+1
+1−
+p(q|s1 )p(q|s2 ) ≥ 1 −
+.
+(5.57)
+q2
+q
+q
+The right hand side can be upper bounded in a number of ways; a simple technique is
+provided in Exercise 5.16, which gives
+p(q|s1 )p(q|s2 ) ≥
+
+1−
+q
+
+1
+,
+4
+
+(5.58)
+
+and thus the probability of obtaining the correct r is at least 1/4.
+Exercise 5.15: Show that the least common multiple of positive integers x and y is
+xy/ gcd(x, y), and thus may be computed in O(L2 ) operations if x and y are L
+bit numbers.
+7 x+1
+Exercise 5.16: For all x ≥ 2 prove that x 1/y 2 dy ≥ 2/3x2 . Show that
+3 ∞ 1
+3
+1
+≤
+dy = ,
+(5.59)
+2
+2
+q
+2 2 y
+4
+q
+and thus that (5.58) holds.
+
+The quantum Fourier transform and its applications
+
+232
+
+What resource requirements does this algorithm consume? The Hadamard transform
+requires O(L) gates, and the inverse Fourier transform requires O(L2 ) gates. The major
+cost in the quantum circuit proper actually comes from the modular exponentiation,
+which uses O(L3 ) gates, for a total of O(L3 ) gates in the quantum circuit proper. The
+continued fractions algorithm adds O(L3 ) more gates, for a total of O(L3 ) gates to obtain
+r . Using the third method for obtaining r from r we need only repeat this procedure a
+constant number of times to obtain the order, r, for a total cost of O(L3 ). The algorithm
+is summarized below.
+Algorithm: Quantum order-ﬁnding
+Inputs: (1) A black box Ux,N which performs the transformation
+|j|k → |j|x2j k mod N ,3 for x co-prime to the L-bit number N , (2)
+t = 2L + 1 + log 2 + 21 qubits initialized to |0, and (3) L qubits initialized
+to the state |1.
+Outputs: The least integer r > 0 such that xr = 1 (mod N ).
+Runtime: O(L3 ) operations. Succeeds with probability O(1).
+Procedure:
+1.
+2.
+3.
+
+|0|1
+1
+→√
+2t
+1
+→√
+2t
+
+initial state
+2t −1
+j=0
+2t −1
+
+|j|1
+
+create superposition
+
+|j|xj mod N 
+
+apply Ux,N
+
+j=0
+
+1
+≈√
+r2t
+r−1
+
+r−1 2t −1
+
+e2πisj/r |j|us 
+s=0 j=0
+
+4.
+
+1
+→√
+r
+
+5.
+
+8
+→ s/r
+
+measure ﬁrst register
+
+6.
+
+→r
+
+apply continued fractions
+algorithm
+
+s=0
+
+8
+|s/r|u
+s
+
+apply inverse Fourier transform to ﬁrst
+register
+
+5.3.2 Application: factoring
+The problem of distinguishing prime numbers from composites, and of resolving
+composite numbers into their prime factors, is one of the most important and
+useful in all of arithmetic. [ . . . ] The dignity of science seems to demand that
+every aid to the solution of such an elegant and celebrated problem be zealously
+cultivated.
+– Carl Friedrich Gauss, as quoted by Donald Knuth
+
+Given a positive composite integer N , what prime numbers when multiplied together
+equal it? This factoring problem turns out to be equivalent to the order-ﬁnding problem
+
+Applications: order-ﬁnding and factoring
+
+233
+
+we just studied, in the sense that a fast algorithm for order-ﬁnding can easily be turned
+into a fast algorithm for factoring. In this section we explain the method used to reduce
+factoring to order-ﬁnding, and give a simple example of this reduction.
+The reduction of factoring to order-ﬁnding proceeds in two basic steps. The ﬁrst
+step is to show that we can compute a factor of N if we can ﬁnd a non-trivial solution
+x = ± 1(mod N ) to the equation x2 = 1(mod N ). The second step is to show that a
+randomly chosen y co-prime to N is quite likely to have an order r which is even, and
+such that y r/2 = ± 1(mod N ), and thus x ≡ y r/2 (mod N ) is a non-trivial solution to
+x2 = 1(mod N ). These two steps are embodied in the following theorems, whose proofs
+may be found in Section A4.3 of Appendix 4.
+Theorem 5.2: Suppose N is an L bit composite number, and x is a non-trivial solution
+to the equation x2 = 1(mod N ) in the range 1 ≤ x ≤ N , that is, neither
+x = 1(mod N ) nor x = N − 1 = −1(mod N ). Then at least one of
+gcd(x − 1, N ) and gcd(x + 1, N ) is a non-trivial factor of N that can be
+computed using O(L3 ) operations.
+Theorem 5.3: Suppose N = pα1 1 . . . pαmm is the prime factorization of an odd composite
+positive integer. Let x be an integer chosen uniformly at random, subject to the
+requirements that 1 ≤ x ≤ N − 1 and x is co-prime to N . Let r be the order of
+x modulo N . Then
+p(r is even and xr/2 = − 1(mod N )) ≥ 1 −
+
+1
+.
+2m
+
+(5.60)
+
+Theorems 5.2 and 5.3 can be combined to give an algorithm which, with high probability, returns a non-trivial factor of any composite N . All the steps in the algorithm
+can be performed efﬁciently on a classical computer except (so far as is known today) an
+order-ﬁnding ‘subroutine’ which is used by the algorithm. By repeating the procedure
+we may ﬁnd a complete prime factorization of N . The algorithm is summarized below.
+Algorithm: Reduction of factoring to order-ﬁnding
+Inputs: A composite number N
+Outputs: A non-trivial factor of N .
+Runtime: O((log N )3 ) operations. Succeeds with probability O(1).
+Procedure:
+1.
+
+If N is even, return the factor 2.
+
+2.
+
+Determine whether N = ab for integers a ≥ 1 and b ≥ 2, and if so
+return the factor a (uses the classical algorithm of Exercise 5.17).
+
+3.
+
+Randomly choose x in the range 1 to N −1. If gcd(x, N ) > 1 then return
+the factor gcd(x, N ).
+
+4.
+
+Use the order-ﬁnding subroutine to ﬁnd the order r of x modulo N .
+
+The quantum Fourier transform and its applications
+
+234
+
+5.
+
+If r is even and xr/2 = − 1(mod N ) then compute gcd(xr/2 − 1, N ) and
+gcd(xr/2 + 1, N ), and test to see if one of these is a non-trivial factor,
+returning that factor if so. Otherwise, the algorithm fails.
+
+Steps 1 and 2 of the algorithm either return a factor, or else ensure that N is an
+odd integer with more than one prime factor. These steps may be performed using
+O(1) and O(L3 ) operations, respectively. Step 3 either returns a factor, or produces
+a randomly chosen element x of {0, 1, 2, . . . , N − 1}. Step 4 calls the order-ﬁnding
+subroutine, computing the order r of x modulo N . Step 5 completes the algorithm,
+since Theorem 5.3 guarantees that with probability at least one-half r will be even and
+xr/2 = − 1(mod N ), and then Theorem 5.2 guarantees that either gcd(xr/2 − 1, N ) or
+gcd(xr/2 + 1, N ) is a non-trivial factor of N . An example illustrating the use of this
+algorithm with the quantum order-ﬁnding subroutine is shown in Box 5.4.
+Exercise 5.17: Suppose N is L bits long. The aim of this exercise is to ﬁnd an
+efﬁcient classical algorithm to determine whether N = ab for some integers
+a ≥ 1 and b ≥ 2. This may be done as follows:
+(1) Show that b, if it exists, satisﬁes b ≤ L.
+(2) Show that it takes at most O(L2 ) operations to compute log2 N , x = y/b for
+b ≤ L, and the two integers u1 and u2 nearest to 2x .
+(3) Show that it takes at most O(L2 ) operations to compute ub1 and ub2 (use
+repeated squaring) and check to see if either is equal to N .
+(4) Combine the previous results to give an O(L3 ) operation algorithm to
+determine whether N = ab for integers a and b.
+Exercise 5.18: (Factoring 91) Suppose we wish to factor N = 91. Conﬁrm that
+steps 1 and 2 are passed. For step 3, suppose we choose x = 4, which is co-prime
+to 91. Compute the order r of x with respect to N , and show that
+xr/2 mod 91 = 64 = − 1(mod 91), so the algorithm succeeds, giving
+gcd(64 − 1, 19) = 7.
+It is unlikely that this is the most efﬁcient method you’ve seen for factoring 91.
+Indeed, if all computations had to be carried out on a classical computer, this
+reduction would not result in an efﬁcient factoring algorithm, as no efﬁcient
+method is known for solving the order-ﬁnding problem on a classical computer.
+Exercise 5.19: Show that N = 15 is the smallest number for which the order-ﬁnding
+subroutine is required, that is, it is the smallest composite number that is not
+even or a power of some smaller integer.
+
+5.4 General applications of the quantum Fourier transform
+The main applications of the quantum Fourier transform we have described so far in
+this chapter are phase estimation and order-ﬁnding. What other problems can be solved
+with these techniques? In this section, we deﬁne a very general problem known as the
+hidden subgroup problem, and describe an efﬁcient quantum algorithm for solving it. This
+problem, which encompasses all known ‘exponentially fast’ applications of the quantum
+Fourier transform, can be thought of as a generalization of the task of ﬁnding the unknown
+period of a periodic function, in a context where the structure of the domain and range
+
+General applications of the quantum Fourier transform
+
+235
+
+Box 5.4: Factoring 15 quantum-mechanically
+The use of order-ﬁnding, phase estimation, and continued fraction expansions in
+the quantum factoring algorithm is illustrated by applying it to factor N = 15.
+First, we choose a random number which has no common factors with N ; suppose
+we choose x = 7. Next, we compute the order r of x with respect to N , using the
+quantum order-ﬁnding algorithm: begin with the state |0|0 and create the state
+1
+√
+2t
+
+2t −1
+k=0
+
+1 
+|k|0 = √
+|0 + |1 + |2 + · · · + |2t − 1 |0
+t
+2
+
+(5.61)
+
+by applying t = 11 Hadamard transforms to the ﬁrst register. Choosing this value
+of t ensures an error probability of at most 1/4. Next, compute f (k) = xk mod N ,
+leaving the result in the second register,
+1
+√
+2t
+
+2t −1
+
+|k|xk mod N 
+
+(5.62)
+
+k=0
+
+1 
+|0|1 + |1|7 + |2|4 + |3|13 + |4|1 + |5|7 + |6|4 + · · · .
+=√
+2t
+
+We now apply the inverse Fourier transform F T † to the ﬁrst register and measure
+it. One way of analyzing the distribution of outcomes obtained is to calculate the
+reduced density matrix for the ﬁrst register, and apply F T † to it, and calculate the
+measurement statistics. However, since no further operation is applied to the second
+register, we can instead apply the principle of implicit measurement (Section 4.4)
+and assume that the second register is measured, obtaining a random result from 1,
+7, 4, or 13. Suppose we get
+4 (any
+ of the results works); this means the state input
+4
+†
+to F T would have been 2t |2 + |6 + |10 + |14 + · · · . After applying F T †
+
+we obtain some state
+α |, with the probability distribution
+0.25
+
+|α|2
+
+0.2
+0.15
+0.1
+0.05
+0
+
+200
+
+400
+
+600
+
+800
+
+1000
+
+1200
+
+1400
+
+1600
+
+1800
+
+2000
+
+
+shown for 2t = 2048. The ﬁnal measurement therefore gives either 0, 512, 1024,
+or 1536, each with probability almost exactly 1/4. Suppose we obtain  = 1536
+from the measurement; computing the continued fraction expansion thus gives
+1536/2048 = 1/(1 + (1/3)), so that 3/4 occurs as a convergent in the expansion, giving r = 4 as the order of x = 7. By chance, r is even, and moreover,
+xr/2 mod N = 72 mod 15 = 4 = − 1 mod 15, so the algorithm works: computing
+the greatest common divisor gcd(x2 − 1, 15) = 3 and gcd(x2 + 1, 15) = 5 tells us
+that 15 = 3×5.
+
+The quantum Fourier transform and its applications
+
+236
+
+of the function may be very intricate. In order to present this problem in the most
+approachable manner, we begin with two more speciﬁc applications: period-ﬁnding (of a
+one-dimensional function), and discrete logarithms. We then return to the general hidden
+subgroup problem. Note that the presentation in this section is rather more schematic
+and conceptual than earlier sections in this chapter; of necessity, this means that the
+reader interested in understanding all the details will have to work much harder!
+5.4.1 Period-ﬁnding
+Consider the following problem. Suppose f is a periodic function producing a single
+bit as output and such that f (x + r) = f (x), for some unknown 0 < r < 2L , where
+x, r ∈ {0, 1, 2, . . .}. Given a quantum black box U which performs the unitary transform U |x|y → |x|y ⊕ f (x) (where ⊕ denotes addition modulo 2) how many black
+box queries and other operations are required to determine r? Note that in practice U
+operates on a ﬁnite domain, whose size is determined by the desired accuracy for r. Here
+is a quantum algorithm which solves this problem using one query, and O(L2 ) other
+operations:
+Algorithm: Period-ﬁnding
+Inputs: (1) A black box which performs the operation U |x|y = |x|y ⊕ f (x),
+(2) a state to store the function evaluation, initialized to |0, and (3)
+t = O(L + log(1/ )) qubits initialized to |0.
+Outputs: The least integer r > 0 such that f (x + r) = f (x).
+Runtime: One use of U , and O(L2 ) operations. Succeeds with probability O(1).
+Procedure:
+1.
+2.
+3.
+
+|0|0
+1
+→√
+2t
+1
+→√
+2t
+
+initial state
+2t −1
+
+4.
+
+create superposition
+
+|x|f (x)
+
+apply U
+
+x=0
+
+1
+≈√
+r2t
+1
+→√
+r
+
+|x|0
+x=0
+2t −1
+
+r−1
+
+r−1 2t −1
+
+e2πi
+
+x/r
+
+|x|fˆ()
+
+=0 x=0
+
+8 fˆ()
+|/r|
+
+apply inverse Fourier transform to ﬁrst
+register
+
+=0
+
+5.
+
+8
+→ /r
+
+measure ﬁrst register
+
+6.
+
+→r
+
+apply continued fractions
+algorithm
+
+The key to understanding this algorithm, which is based on phase estimation, and
+is nearly identical to the algorithm for quantum order-ﬁnding, is step 3, in which we
+introduce the state
+r−1
+1
+e−2πi x/r |f (x) ,
+(5.63)
+|fˆ() ≡ √
+r x=0
+
+General applications of the quantum Fourier transform
+
+237
+
+the Fourier transform of |f (x). The identity used in step 3 is based on
+1
+|f (x) = √
+r
+
+r−1
+
+e2πi
+
+x/r
+
+|fˆ() ,
+
+(5.64)
+
+=0
+
+
+2πi x/r
+= r for x an integer multiple of r,
+which is easy to verify by noting that r−1
+=0 e
+and zero otherwise. The approximate equality in step 3 is required because 2t may not be
+an integer multiple of r in general (it need not be: this is taken account of by the phase
+estimation bounds). By Equation (5.22), applying the inverse Fourier transform to the
+ﬁrst register, in step 4, gives an estimate of the phase /r, where  is chosen randomly.
+r can be efﬁciently obtained in the ﬁnal step using a continued fraction expansion.
+
+Box 5.5: The shift-invariance property of the Fourier transform
+The Fourier transform, Equation (5.1), has an interesting and very useful property,
+known as shift invariance. Using notation which is useful in describing the general
+application of this property, let us describe the quantum Fourier transform as
+αh |h →
+h∈H
+
+α̃g |g ,
+
+(5.65)
+
+g∈G
+
+
+where α̃g = h∈H αh exp(2πigh/|G|), H is some subset of G, and G indexes the
+states in an orthonormal basis of the Hilbert space. For example, G may be the set
+of numbers from 0 to 2n − 1 for an n qubit system. |G| denotes the number of
+elements in G. Suppose we apply to the initial state an operator Uk which performs
+the unitary transform
+
+Uk |g = |g + k ,
+
+(5.66)
+
+then apply the Fourier transform. The result,
+Uk
+
+αh |h =
+h∈H
+
+αh |h + k →
+h∈H
+
+e2πigk/|G| α̃g |g
+
+(5.67)
+
+g∈G
+
+has the property that the magnitude of the amplitude for |g does not change, no
+matter what k is, that is: | exp(2πigk/|G|)α̃g | = |α̃g |.
+In the language of group theory, G is a group, H a subgroup of G, and we say that
+if a function f on G is constant on cosets of H, then the Fourier transform of f is
+invariant over cosets of H.
+Why does this work? One way to understand this is to realize that (5.63) is approximately the Fourier transform over {0, 1, . . . , 2L − 1} of |f (x) (see Exercise 5.20), and
+the Fourier transform has an interesting and very useful property, known as shift invariance, described in Box 5.5. Another is to realize that what the order-ﬁnding algorithm
+does is just to ﬁnd the period of the function f (k) = xk mod N , so the ability to ﬁnd the
+period of a general periodic function is not unexpected. Yet another way is to realize that
+the implementation of the black box U is naturally done using a certain unitary operator
+whose eigenvectors are precisely |fˆ(), as described in Exercise 5.21 below, so that the
+phase estimation procedure of Section 5.2 can be applied.
+
+The quantum Fourier transform and its applications
+
+238
+
+Exercise 5.20: Suppose f (x + r) = f (x), and 0 ≤ x < N , for N an integer multiple
+of r. Compute
+1
+fˆ() ≡ √
+N
+
+N −1
+
+e−2πi
+
+x/N
+
+f (x) ,
+
+(5.68)
+
+x=0
+
+and relate the result to (5.63). You will need to use the fact that
+* 
+N/r
+if  is an integer multiple of N/r
+2πik /N
+e
+=
+0
+otherwise.
+k∈{0,r,2r,...,N −r}
+
+(5.69)
+Exercise 5.21: (Period-ﬁnding and phase estimation) Suppose you are given a
+unitary operator Uy which performs the transformation Uy |f (x) = |f (x + y),
+for the periodic function described above.
+(1) Show that the eigenvectors of Uy are |fˆ(), and calculate their eigenvalues.
+(2) Show that given |f (x0 ) for some x0 , Uy can be used to realize a black box
+which is as useful as U in solving the period-ﬁnding problem.
+
+5.4.2 Discrete logarithms
+The period ﬁnding problem we just considered is a simple one, in that the domain and
+range of the periodic function were integers. What happens when the function is more
+complex? Consider the function f (x1 , x2 ) = asx1 +x2 mod N , where all the variables
+are integers, and r is the smallest positive integer for which ar mod N = 1. This
+function is periodic, since f (x1 + , x2 − s) = f (x1 , x2 ), but now the period is a 2-tuple,
+(, −s), for integer . This may seem to be a strange function, but it is very useful
+in cryptography, since determining s allows one to solve what is known as the discrete
+logarithm problem: given a and b = as , what is s? Here is a quantum algorithm which
+solves this problem using one query of a quantum black box U which performs the unitary
+transform U |x1 |x2 |y → |x1 |x2 |y ⊕ f (x) (where ⊕ denotes bitwise addition modulo
+2), and O(log r2 ) other operations. We assume knowledge of the minimum r > 0 such
+that ar mod N = 1, which can be obtained using the order-ﬁnding algorithm described
+previously.
+Algorithm: Discrete logarithm
+Inputs: (1) A black box which performs the operation
+U |x1 |x2 |y = |x1 |x2 |y ⊕ f (x1 , x2 ), for f (x1 , x2 ) = bx1 ax2 , (2) a state to store
+the function evaluation, initialized to |0, and (3) two t = O(log r + log(1/ ))
+qubit registers initialized to |0.
+Outputs: The least positive integer s such that as = b.
+Runtime: One use of U , and O(log r2 ) operations. Succeeds with probability
+O(1).
+Procedure:
+1.
+
+|0|0|0
+
+initial state
+
+General applications of the quantum Fourier transform
+
+2.
+3.
+
+1
+→ t
+2
+→
+
+1
+2t
+
+239
+
+2t −1 2t −1
+
+|x1 |x2 |0
+
+create superposition
+
+|x1 |x2 |f (x1 , x2 )
+
+apply U
+
+x1 =0 x2 =0
+2t −1 2t −1
+x1 =0 x2 =0
+
+1
+≈ t√
+2 r
+1
+= t√
+2 r
+
+r−1 2t −1 2t −1
+
+e2πi(s
+2 =0
+
+r−1
+
+2 x1 + 2 x2 )/r
+
+x1 =0 x2 =0
+
+⎡
+
+2 =0
+
+⎤⎡
+
+2t −1
+
+⎣
+
+|x1 |x2 |fˆ(s2 , 2 )
+
+e2πi(s
+
+2 x1 )/r
+
+⎤
+
+2t −1
+
+|x1 ⎦ ⎣
+
+x1 =0
+
+2 x2 )/r
+
+e2πi(
+
+|x2 ⎦ |fˆ(s2 , 2 )
+
+x2 =0
+
+r−1
+
+apply inverse Fourier transform to ﬁrst
+two registers
+
+5.
+
+1
+8 ˆ
+|s8
+→√
+2 /r|2 /r|f (s2 , 2 )
+r =0
+2
+'
+(
+8
+→ s8
+2 /r, 2 /r
+
+6.
+
+→s
+
+apply generalized continued
+fractions algorithm
+
+4.
+
+measure ﬁrst two registers
+
+Again, the key to understanding this algorithm is step 3, in which we introduce the
+state
+1
+|fˆ(1 , 2 ) = √
+r
+
+r−1
+
+e−2πi
+
+2 j/r
+
+|f (0, j) ,
+
+(5.70)
+
+j=0
+
+the Fourier transform of |f (x1 , x2 ) (see Exercise 5.22). In this equation, the values of 1
+and 2 must satisfy
+r−1
+
+e2πik(
+
+1 /s− 2 )/r
+
+= r.
+
+(5.71)
+
+k=0
+
+Otherwise, the amplitude of |fˆ(1 , 2 ) is nearly zero. The generalized continued fraction
+expansion used in the ﬁnal step to determine s is analogous to the procedures used in
+Section 5.3.1, and is left as a simple exercise for you to construct.
+Exercise 5.22: Show that
+r−1 r−1
+
+|fˆ(1 , 2 ) =
+
+e−2πi(
+
+1 x1 + 2 x2 )/r
+
+x1 =0 x2 =0
+
+1
+|f (x1 , x2 ) = √
+r
+
+r−1
+
+e−2πi
+
+2 j/r
+
+|f (0, j) ,
+
+j=0
+
+(5.72)
+and we are constrained to have 1 /s − 2 be an integer multiple of r for this
+expression to be non-zero.
+Exercise 5.23: Compute
+1
+r
+
+r−1 r−1
+1 =0
+
+e−2πi(
+
+1 x1 + 2 x2 )/r
+
+|fˆ(1 , 2 )
+
+(5.73)
+
+2 =0
+
+using (5.70), and show that the result is f (x1 , x2 ).
+Exercise 5.24: Construct the generalized continued fractions algorithm needed in
+
+240
+
+The quantum Fourier transform and its applications
+
+step 6 of the discrete logarithm algorithm to determine s from estimates of s2 /r
+and 2 /r.
+Exercise 5.25: Construct a quantum circuit for the black box U used in the quantum
+discrete logarithm algorithm, which takes a and b as parameters, and performs
+the unitary transform |x1 |x2 |y → |x1 |x2 |y ⊕ bx1 ax2 . How many elementary
+operations are required?
+5.4.3 The hidden subgroup problem
+By now, a pattern should be coming clear: if we are given a periodic function, even when
+the structure of the periodicity is quite complicated, we can often use a quantum algorithm
+to determine the period efﬁciently. Importantly, however, not all periods of periodic
+functions can be determined. The general problem which deﬁnes a broad framework
+for these questions can be succinctly expressed in the language of group theory (see
+Appendix 2 for a quick review) as follows:
+Let f be a function from a ﬁnitely generated group G to a ﬁnite set X such that
+f is constant on the cosets of a subgroup K, and distinct on each coset. Given a
+quantum black box for performing the unitary transform U |g|h = |g|h⊕f (g),
+for g ∈ G, h ∈ X, and ⊕ an appropriately chosen binary operation on X, ﬁnd a
+generating set for K.
+
+Order-ﬁnding, period-ﬁnding, discrete logarithms, and many other problems are instances of this hidden subgroup problem; some interesting ones are listed in Figure 5.5.
+For G a ﬁnite Abelian group, a quantum computer can solve the hidden subgroup
+problem using a number of operations polynomial in log |G|, and one use of the black
+box function evaluation, using an algorithm very similar to the others in this section.
+(In fact, solution for a ﬁnitely generated Abelian group is also possible, along similar
+lines, but we’ll stick to the ﬁnite case here.) We shall leave detailed speciﬁcation of the
+algorithm to you as an exercise, which should be simple after we explain the basic idea.
+Many things remain essentially the same, because ﬁnite Abelian groups are isomorphic
+to products of additive groups over the integers in modular arithmetic. This means that
+the quantum Fourier transform of f over G is well deﬁned (see Section A2.3), and can
+still be done efﬁciently. The ﬁrst non-trivial step of the algorithm is to use a Fourier
+transform (generalizing the Hadamard operation) to create a superposition over group
+elements, which is then transformed by applying the quantum black box for f in the next
+step, to give
+1
+
+|g|f (g) .
+(5.74)
+|G| g∈G
+As before, we would now like to rewrite |f (g) in the Fourier basis. We start with
+1
+|f (g) = 
+|G|
+
+|G|−1
+
+e2πi
+
+g/|G|
+
+|fˆ() ,
+
+(5.75)
+
+=0
+
+where we have chosen exp[−2πig/|G|] as a representation (see Exercise A2.13) of g ∈ G
+indexed by  (the Fourier transform maps between group elements and representations:
+see Exercise A2.23). The key is to recognize that this expression can be simpliﬁed because
+
+General applications of the quantum Fourier transform
+
+Name
+
+G
+
+X
+
+K
+
+241
+
+Function
+*
+f (x) = 0
+K = {0, 1} :
+f (x) = 1
+*
+f (x) = x
+K = {0} :
+f (x) = 1 − x
+
+Deutsch
+
+{0, 1}, ⊕
+
+{0, 1}
+
+{0} or {0, 1}
+
+Simon
+
+{0, 1}n , ⊕
+
+any
+ﬁnite
+set
+
+{0, s}
+s ∈ {0, 1}n
+
+f (x ⊕ s) = f (x)
+
+Periodﬁnding
+
+Z, +
+
+any
+ﬁnite
+set
+
+{0, r, 2r, . . .}
+r∈G
+
+f (x + r) = f (x)
+
+Orderﬁnding
+
+Z, +
+
+{aj }
+j ∈ Zr
+ar = 1
+
+{0, r, 2r, . . .}
+r∈G
+
+f (x) = ax
+f (x + r) = f (x)
+
+Discrete
+logarithm
+
+Zr × Zr
++ (mod r)
+
+{aj }
+j ∈ Zr
+ar = 1
+
+(, −s)
+, s ∈ Zr
+
+Order of a
+permutation
+
+Z2m × Z2n
++ (mod 2m )
+
+Z2n
+
+{0, r, 2r, . . .}
+r∈X
+
+Hidden
+linear
+function
+
+Z × Z, +
+
+ZN
+
+(, −s)
+, s ∈ X
+
+Abelian
+stabilizer
+
+(H, X)
+H = any
+Abelian
+group
+
+any
+ﬁnite
+set
+
+f (x1 , x2 ) = akx1 +x2
+f (x1 + , x2 − s) = f (x1 , x2 )
+f (x, y) = π x (y)
+f (x + r, y) = f (x, y)
+π = permutation on X
+f (x1 , x2 ) =
+π(sx1 + x2 mod N )
+π = permutation on X
+
+{s ∈ H |
+f (s, x) = x,
+∀x ∈ X}
+
+f (gh, x) = f (g, f (h, x))
+f (gs, x) = f (g, x)
+
+Figure 5.5. Hidden subgroup problems. The function f maps from the group G to the ﬁnite set X, and is
+promised to be constant on cosets of the hidden subgroup K ⊆ G. ZN represents the set {0, 1, . . . , N − 1} in
+this table, and Z is the integers. The problem is to ﬁnd K (or a generating set for it), given a black box for f .
+
+f is constant and distinct on cosets of the subgroup K, so that
+1
+e−2πi
+|fˆ() = 
+|G| g∈G
+
+g/|G|
+
+|f (g)
+
+(5.76)
+
+has nearly zero amplitude for all values of  except those which satisfy
+e−2πi
+h∈K
+
+h/|G|
+
+= |K| .
+
+(5.77)
+
+242
+
+The quantum Fourier transform and its applications
+
+If we can determine , then using the linear constraints given by this expression allows
+us to determine elements of K, and since K is Abelian, this allows us to eventually
+determine a generating set for the whole hidden subgroup, solving the problem.
+However, life is not so simple. An important reason why the period-ﬁnding and discrete
+logarithm algorithms work is because of the success of the continued fraction expansion
+in obtaining  from /|G|. In those problems,  and |G| are arranged to not have any
+common factors, with high probability. In the general case, however, this may not be
+true, since |G| is free to be a composite number with many factors, and we have no
+useful prior information about .
+Fortunately, this problem can be solved: as mentioned above, any ﬁnite Abelian group
+G is isomorphic to a product of cyclic groups of prime power order, that is, G = Zp1 ×
+Zp2 ×· · ·×ZpM , where pi are primes, and Zpi is the group over integers {0, 1, . . . , pi −1}
+with addition modulo pi being the group operation. We can thus re-express the phase
+which appears in (5.75) as
+e2πi
+
+g/|G|
+
+=
+
+M
+/
+
+e2πi
+
+
+i gi /pi
+
+(5.78)
+
+i=1
+
+for gi ∈ Zpi . The phase estimation procedure now gives us i , from which we determine
+, and thus, sample K as described above, to solve the hidden subgroup problem.
+Exercise 5.26: Since K is a subgroup of G, when we decompose G into a product of
+cyclic groups of prime power order, this also decomposes K. Re-express (5.77)
+to show that determining i allows one to sample from the corresponding cyclic
+subgroup Kpi of K.
+Exercise 5.27: Of course, the decomposition of a general ﬁnite Abelian group G into a
+product of cyclic groups of prime power order is usually a difﬁcult problem (at
+least as hard as factoring integers, for example). Here, quantum algorithms come
+to the rescue again: explain how the algorithms in this chapter can be used to
+efﬁciently decompose G as desired.
+Exercise 5.28: Write out a detailed speciﬁcation of the quantum algorithm to solve
+the hidden subgroup problem, complete with runtime and success probability
+estimates, for ﬁnite Abelian groups.
+Exercise 5.29: Give quantum algorithms to solve the Deutsch and Simon problems
+listed in Figure 5.5, using the framework of the hidden subgroup problem.
+5.4.4 Other quantum algorithms?
+One of the most intriguing aspects of this framework for describing quantum algorithms
+in terms of the hidden subgroup problem is the suggestion that more difﬁcult problems might be solvable by considering various groups G and functions f . We have only
+described the solution of this problem for Abelian groups. What about non-Abelian
+groups? They are quite interesting (see Appendix 2 for a discussion of general Fourier
+transforms over non-Abelian groups): for example, the problem of graph isomorphism is
+to determine if two given graphs are the same under some permutation of the labels of
+the n vertices (Section 3.2.3). These permutations can be described as transformations
+under the symmetric group Sn , and algorithms for performing fast Fourier transforms
+
+Chapter problems
+
+243
+
+over these groups exists. However, a quantum algorithm for efﬁciently solving the graph
+isomporphism problem remains unknown.
+Even if more general cases of the hidden subgroup problem remain unsolvable by
+quantum computers, having this unifying framework is useful, because it allows us to
+ask questions about how one might be able to step outside its limitations. It is difﬁcult
+to believe that all fast quantum algorithms that will ever be discovered will be just ways
+to solve the hidden subgroup problem. If one thinks of these problems as being based on
+the coset invariance property of the Fourier transform, in searching for new algorithms,
+perhaps the thing to do then is to investigate other transforms with different invariances.
+Going in another direction, one might ask: what difﬁcult hidden subgroup problems
+might be efﬁciently solved given an arbitrary (but speciﬁed independently of the problem)
+quantum state as a helper? After all, as discussed in Chapter 4, most quantum states are
+actually exponentially hard to construct. Such a state might be a useful resource (a real
+‘quantum oracle’), if quantum algorithms existed to utilize them to solve hard problems!
+The hidden subgroup problem also captures an important constraint underlying the
+class of quantum algorithms which are exponentially faster than their (known) classical
+counterparts: this is a promise problem, meaning that it is of the form ‘F (X) is promised
+to have such and such property: characterize that property.’ Rather disappointingly,
+perhaps, we shall show at the end of the next chapter that, in solving problems without
+some sort of promise, quantum computers cannot achieve an exponential speedup over
+classical computers; the best speedup is polynomial. On the other hand, this gives us an
+important clue as to what kinds of problems quantum computers might be good at: in
+retrospect, the hidden subgroup problem might be thought of as a natural candidate for
+quantum computation. What other natural problems are there? Think about it!
+Problem 5.1: Construct a quantum circuit to perform the quantum Fourier transform
+1
+|j −→ √
+p
+
+p−1
+
+e2πijk/p |k
+
+(5.79)
+
+k=0
+
+where p is prime.
+Problem 5.2: (Measured quantum Fourier transform) Suppose the quantum
+Fourier transform is performed as the last step of a quantum computation,
+followed by a measurement in the computational basis. Show that the
+combination of quantum Fourier transform and measurement is equivalent to a
+circuit consisting entirely of one qubit gates and measurement, with classical
+control, and no two qubit gates. You may ﬁnd the discussion of Section 4.4
+useful.
+Problem 5.3: (Kitaev’s algorithm) Consider the quantum circuit
+_ _ _ _ _ _ L _ _ 
+
+
+
+
+
+
+
+_ _ _ _ _ _ _ _ 
+
+where |u is an eigenstate of U with eigenvalue e2πiϕ . Show that the top qubit is
+
+244
+
+The quantum Fourier transform and its applications
+
+measured to be 0 with probability p ≡ cos2 (πϕ). Since the state |u is unaffected
+by the circuit it may be reused; if U can be replaced by U k , where k is an
+arbitrary integer under your control, show that by repeating this circuit and
+increasing k appropriately, you can efﬁciently obtain as many bits of p as desired,
+and thus, of ϕ. This is an alternative to the phase estimation algorithm.
+Problem 5.4: The runtime bound O(L3 ) we have given for the factoring algorithm is
+not tight. Show that a better upper bound of O(L2 log L log log L) operations can
+be achieved.
+Problem 5.5: (Non-Abelian hidden subgroups – Research) Let f be a function
+on a ﬁnite group G to an arbitrary ﬁnite range X, which is promised to be
+constant and distinct on distinct left cosets of a subgroup K. Start with the state
+1
+
+|G|m
+
+|g1 , . . . , gm |f (g1 ), . . . , f (gm ) ,
+
+(5.80)
+
+g1 ,...,gm
+
+and prove that picking m = 4 log |G| + 2 allows K to be identiﬁed with
+probability at least 1 − 1/|G|. Note that G does not necessarily have to be
+Abelian, and being able to perform a Fourier transform over G is not required.
+This result shows that one can produce (using only O(log |G|) oracle calls) a ﬁnal
+result in which the pure state outcomes corresponding to different possible
+hidden subgroups are nearly orthogonal. However, it is unknown whether a
+POVM exists or not which allows the hidden subgroup to be identiﬁed
+efﬁciently (i.e. using poly(log |G|) operations) from this ﬁnal state.
+Problem 5.6: (Addition by Fourier transforms) Consider the task of constructing
+a quantum circuit to compute |x → |x + y mod 2n , where y is a ﬁxed constant,
+and 0 ≤ x < 2n . Show that one efﬁcient way to do this, for values of y such as
+1, is to ﬁrst perform a quantum Fourier transform, then to apply single qubit
+phase shifts, then an inverse Fourier transform. What values of y can be added
+easily this way, and how many operations are required?
+
+History and further reading
+
+245
+
+Summary of Chapter 5: The quantum Fourier transform and its
+applications
+• When N = 2n the quantum Fourier transform
+1
+|j = |j1 , . . . , jn  −→ √
+N
+
+N −1
+
+jk
+
+e2πi N |k
+
+(5.81)
+
+k=0
+
+may be written in the form
+1
+
+|0 + e2πi0.jn−1 jn |1 . . . |0 + e2πi0.j1 j2 ...jn |1 ,
+(5.82)
+and may be implemented using Θ(n2 ) gates.
+|j →
+
+2n/2
+
+|0 + e2πi0.jn |1
+
+• Phase estimation: Let |u be an eigenstate of the operator U with eigenvalue
+e2πiϕ . Starting from the initial state |0⊗t |u, and given the ability to efﬁciently
+k
+perform U 2 for integer k, this algorithm (shown in Figure 5.3) can be used
+2to efﬁciently
+3obtain the state |ϕ̃|u, where ϕ̃ accurately approximates ϕ to t −
+log 2 + 21 bits with probability at least 1 − .
+• Order-ﬁnding: The order of x modulo N is the least positive integer r such that
+xr mod N = 1. This number can be computed in O(L3 ) operations using the
+quantum phase estimation algorithm, for L-bit integers x and N .
+• Factoring: The prime factors of an L-bit integer N can be determined in O(L3 )
+operations by reducing this problem to ﬁnding the order of a random number x
+co-prime with N .
+• Hidden subgroup problem: All the known fast quantum algorithms can be
+described as solving the following problem: Let f be a function from a ﬁnitely
+generated group G to a ﬁnite set X such that f is constant on the cosets of a
+subgroup K, and distinct on each coset. Given a quantum black box for performing
+the unitary transform U |g|h = |g|h ⊕ f (g), for g ∈ G and h ∈ X, ﬁnd a
+generating set for K.
+
+History and further reading
+The deﬁnition of the Fourier transform may be generalized beyond what we have considered in this chapter. In the general scenario a Fourier transform is deﬁned on a set
+of complex numbers αg , where the index g is chosen from some group, G. In this
+chapter we have chosen G to be the additive group of integers modulo 2n , often denoted Z2n . Deutsch[Deu85] showed that the Fourier transform over the group Zn2 could
+be implemented efﬁciently on a quantum computer – this is the Hadamard transform
+of earlier chapters. Shor [Sho94] realized to spectacular effect that quantum computers
+could efﬁciently implement the quantum Fourier transform over groups Zm for certain
+special values of m. Inspired by this result Coppersmith[Cop94], Deutsch (unpublished),
+and Cleve (unpublished) gave the simple quantum circuits for computing the quantum
+Fourier transform over Z2n which we have used in this chapter. Cleve, Ekert, Mac-
+
+246
+
+The quantum Fourier transform and its applications
+
+chiavello and Mosca[CEMM98] and Grifﬁths and Niu[GN96] independently discovered the
+product formula (5.4); in fact, this result had been realized much earlier by Danielson
+and Lanczos. The simpliﬁed proof starting in Equation (5.5) was suggested by Zhou.
+Grifﬁths and Niu[GN96] are responsible for the measured quantum Fourier transform
+found in Problem 5.2.
+The Fourier transform over Z2n was generalized to obtain a Fourier transform over
+an arbitrary ﬁnite Abelian group by Kitaev[Kit95], who also introduced the phase estimation procedure in the form given in Problem 5.3. Cleve, Ekert, Macchiavello and
+Mosca[CEMM98] also integrated several of the techniques of Shor and Kitaev into one
+nice picture, upon which Section 5.2 is based. A good description of the phase estimation
+algorithm can be found in Mosca’s Ph.D. thesis[Mos99].
+Shor announced the quantum order-ﬁnding algorithm in a seminal paper in 1994[Sho94],
+and noted that the problems of performing discrete logarithms and factoring could be
+reduced to order-ﬁnding. The ﬁnal paper, including extended discussion and references,
+was published in 1997[Sho97]. This paper also contains a discussion of clever multiplication methods that may be used to speed up the algorithm even further than in
+our description, which uses relatively naive multiplication techniques. With these faster
+multiplication methods the resources required to factor a composite integer n scale as
+O(n2 log n log log n), as claimed in the introduction to the chapter. In 1995 Kitaev[Kit95]
+announced an algorithm for ﬁnding the stabilizer of a general Abelian group, which he
+showed could be used to solve discrete logarithm and factoring as special cases. In addition, this algorithm contained several elements not present in Shor’s algorithm. A good
+review of the factoring algorithm was written by Ekert and Jozsa [EJ96]; also see DiVincenzo [DiV95a]. The discussion of continued fractions is based upon Chapter 10 of Hardy
+and Wright[HW60]. At the time of writing, the most efﬁcient classical algorithm for factoring on a classical computer is the number ﬁeld sieve. This is described in a collection
+edited by A. K. Lenstra and H. W. Lenstra, Jr.[LL93].
+The generalization of quantum algorithms to solving the hidden subgroup problem has
+been considered by many authors. Historically, Simon was ﬁrst to note that a quantum
+computer could ﬁnd a hidden period of a function satisfying f (x⊕s) = f (x)[Sim94, Sim97].
+In fact, Shor found his result by generalizing Simon’s result, and by applying a Fourier
+transform over ZN instead of Simon’s Hadamard transforms (a Fourier transform over
+Zk2 ). Boneh and Lipton then noted the connection to the hidden subgroup problem,
+and described a quantum algorithm for solving the hidden linear function problem[BL95].
+Jozsa was the ﬁrst to explicitly provide a uniform description of the Deutsch–Jozsa, Simon, and Shor algorithms in terms of the hidden subgroup problem[Joz97]. Ekert and
+Jozsa’s work in studying the role of the Abelian and non-Abelian Fast Fourier Transform algorithms in speedup of quantum algorithms[EJ98] has also been insightful. Our
+description of the hidden subgroup problem in Section 5.4 follows the framework of
+Mosca and Ekert[ME99, Mos99]. Cleve has proven that the problem of ﬁnding an order of a
+permutation requires an exponential number of queries for a bounded-error probabilistic
+classical computer[Cle99]. Generalizations of this method to beyond Abelian groups have
+been attempted by Ettinger and Høyer[EH99], by Roetteler and Beth[RB98] and Pueschel,
+Roetteler, and Beth[PRB98], by Beals, who also described constructions of quantum Fourier
++
+transforms over the symmetric group[BBC 98], and by Ettinger, Høyer, and Knill[EHK99].
+These results have shown, so far, that there exists a quantum algorithm to solve the
+
+

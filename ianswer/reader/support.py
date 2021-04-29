@@ -35,3 +35,4 @@ class TxtFileParser(FileParser):
         except Exception as e:
             raise ContentReadException(path_to_file) from e
         return content
+
