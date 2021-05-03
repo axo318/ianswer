@@ -43,7 +43,11 @@ class IndexedData:
 
 
 class Result:
-    def __init__(self, title: str, text: str, score: float, answer_loc: tuple = None):
+    def __init__(self,
+                 title: str,
+                 text: str,
+                 score: float,
+                 answer_loc: tuple = None):
         """ Class which holds a question result
 
         :param title: title of the text excerpt
@@ -60,6 +64,26 @@ class Result:
         s = f"Result('{self._title}', score={score}) [\n"
 
         paragraph = "\n".join(wrap(self._text))
+        s += f"{paragraph}\n]"
+        return s
+
+    def prettify(self, answer_color='\033[92m'):
+        score = "{:.4f}".format(self._score)
+        s = f"Result('{self._title}', score={score}) [\n"
+
+        if self._answer_loc is not None:
+            HIGHLIGHT = answer_color
+            RESET = '\033[0m'
+
+            text = self._text
+            b = self._answer_loc[0]
+            e = self._answer_loc[1]
+
+            new_text = text[:b] + HIGHLIGHT + text[b:e+1] + RESET + text[e+1:]
+            paragraph = "\n".join(wrap(new_text))
+        else:
+            paragraph = "\n".join(wrap(self._text))
+
         s += f"{paragraph}\n]"
         return s
 

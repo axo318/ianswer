@@ -1,4 +1,4 @@
-from ianswer.algorithm.algorithm import SimpleAlgorithm
+from ianswer.algorithm import SimpleAlgorithm
 from ianswer.embedder.embedder import GoogleEncoder
 from ianswer.model import IModel
 from ianswer.processor.preprocessor import SimpleCleanPreprocessor
